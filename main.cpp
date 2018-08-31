@@ -636,15 +636,15 @@ void playPauseMenu()
 	paused = true;
 
 
-	if((KeyInput::stroke('A') || 
-		([&]()->bool 
+	if((KeyInput::stroke('A') ||
+		([&]()->bool
 	{
 		for(uint a = 0; a < optAmount; a++)
 			if(Sprite(new vector<wstring>{options[a]}).mouseCollision({short(con->getWidth() / 2 - ((options[a]).size() / 2)), short(ceil(con->getHeight() / 4.5f) + a * 2)}, MouseInput::position))
 				return true;
 		return false;
-	}() && MouseInput::stroke(LEFT_CLICK)) || 
-KeyInput::stroke(VK_RETURN)) || (selected&&KeyInput::stroke('S')))
+	}() && MouseInput::stroke(LEFT_CLICK)) ||
+	   KeyInput::stroke(VK_RETURN)) || (selected&&KeyInput::stroke('S')))
 		selected = !selected,
 		swap(colours[1], colours[2]);
 
@@ -895,6 +895,17 @@ void playTrack()
 	// draws frets that lightup when key is pressed
 	for(short a = 0; a < 5; a++)
 		con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
+
+	ushort a;
+	con->toConsoleBuffer(L"┏━┓", 0, con->getHeight() - 24);
+	for(a = 2; a <= 23; a++)
+		con->toConsoleBuffer(L"┃ ┃", 0, con->getHeight() - a);
+	for(a = 2; a <= 15; a++)
+		con->toConsoleBuffer(L"█", 1, con->getHeight() - a,FG_GREEN);
+
+	con->toConsoleBuffer(L"┗━┛", 0, con->getHeight() - 1);
+
+
 }
 #pragma endregion
 #pragma endregion
