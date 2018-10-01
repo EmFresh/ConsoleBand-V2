@@ -903,8 +903,19 @@ void playTrack()
 	con->toConsoleBuffer(*percentstr, con->getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
 
 	// draws frets that lightup when key is pressed
-	for (short a = 0; a < 5; a++)
-		con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
+	for(short a = 0; a < 5; a++)
+		con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
+
+	ushort a;
+	con->toConsoleBuffer(L"┏━┓", 0, con->getHeight() - 24);
+	for(a = 2; a <= 23; a++)
+		con->toConsoleBuffer(L"┃ ┃", 0, con->getHeight() - a);
+	for(a = 2; a <= 15; a++)
+		con->toConsoleBuffer(L"█", 1, con->getHeight() - a,FG_GREEN);
+
+	con->toConsoleBuffer(L"┗━┛", 0, con->getHeight() - 1);
+
+
 }
 #pragma endregion
 #pragma endregion
