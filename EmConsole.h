@@ -73,7 +73,10 @@ struct Sprite
 	{
 		create(sprite, tag);
 	}
-
+	Sprite(std::vector<std::wstring> sprite, char* tag = nullptr)
+	{
+		create(&sprite, tag);
+	}
 
 	/*
 	Takes a .txt file and outputs into the Sprite.
@@ -86,7 +89,7 @@ struct Sprite
 		fopen_s(&f, file, "r, ccs=UNICODE");
 
 		//std::vector<std::wstring>* tmp = _sprite;
-		m_sprite->clear();
+		m_sprite.clear();
 
 		//std::vector<std::wstring>sprite;
 
@@ -94,12 +97,12 @@ struct Sprite
 
 		wchar_t * str = new wchar_t[255];
 
-		while(str = fgetws(str, 255, f),
-			  m_sprite->push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
-			m_width = m_width < (m_sprite[0][m_height]).size() ? (m_sprite[0][m_height]).size() : m_width,
+		while (str = fgetws(str, 255, f),
+			m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
+			m_width = m_width < (m_sprite[m_height]).size() ? (m_sprite[m_height]).size() : m_width,
 			m_height++;
 
-		m_sprite->pop_back();
+		m_sprite.pop_back();
 		fclose(f);
 	}
 
@@ -107,12 +110,13 @@ struct Sprite
 	{
 		setTag(tag);
 
-		m_sprite->clear();
+		m_sprite.clear();
 		m_height = sprite->size();
-		*m_sprite = *sprite;
-		for(int a = 0; a < m_height; a++)
-			m_width = m_width < m_sprite[0][a].size() ? m_sprite[0][a].size() : m_width;
+		m_sprite = *sprite;
+		for (int a = 0; a < m_height; a++)
+			m_width = m_width < m_sprite[a].size() ? m_sprite[a].size() : m_width;
 	}
+
 	/*
 
 	************
@@ -123,25 +127,26 @@ struct Sprite
 	*/
 	bool boxCollision(Sprite s2, COORD p1, COORD p2)
 	{
-		p1 = {p1.X + m_width / 2,p1.Y + m_height / 2};
-		p2 = {p2.X + s2.m_width / 2,p2.Y + s2.m_height / 2};
+		p1 = { p1.X + m_width / 2,p1.Y + m_height / 2 };
+		p2 = { p2.X + s2.m_width / 2,p2.Y + s2.m_height / 2 };
 
-		if(abs(p1.X - p2.X) <= m_width / 2 + s2.m_width / 2)
-			if(abs(p1.Y - p2.Y) <= m_height / 2 + s2.m_height / 2)
+		if (abs(p1.X - p2.X) <= m_width / 2 + s2.m_width / 2)
+			if (abs(p1.Y - p2.Y) <= m_height / 2 + s2.m_height / 2)
 				return true;
 		return false;
 	}
-	
+
 	bool mouseCollision(COORD p1, COORD p2)
 	{
-		p1 = {p1.X + m_width / 2,p1.Y + m_height / 2};
-		p2 = {p2.X ,p2.Y };
+		p1 = { p1.X + m_width / 2,p1.Y + m_height / 2 };
+		p2 = { p2.X ,p2.Y };
 
-		if(abs(p1.X - p2.X) <= m_width / 2)
-			if(abs(p1.Y - p2.Y) <= m_height / 2)
+		if (abs(p1.X - p2.X) <= m_width / 2)
+			if (abs(p1.Y - p2.Y) <= m_height / 2)
 				return true;
 		return false;
 	}
+
 	void setTag(char* tag)
 	{
 		m_tag = tag;
@@ -159,7 +164,7 @@ struct Sprite
 
 	std::wstring* getSprite()
 	{
-		return m_sprite->data();
+		return m_sprite.data();
 	}
 
 	unsigned short getWidth()
@@ -173,7 +178,7 @@ struct Sprite
 	}
 
 private:
-	std::vector<std::wstring>* m_sprite = new std::vector<std::wstring>;
+	std::vector<std::wstring> m_sprite;
 	char *m_tag = nullptr;
 	ushort m_width = 0, m_height = 0;
 	short m_colour = 0;
@@ -220,13 +225,13 @@ struct SpriteSheet
 
 		fopen_s(&f, file, "r, ccs=UNICODE");
 
-		while(str2 = fgetws(str2, 255, f),
-			  str = (str2 == nullptr ? L"" : (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
-			  str2 != nullptr)
+		while (str2 = fgetws(str2, 255, f),
+			str = (str2 == nullptr ? L"" : (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
+			str2 != nullptr)
 		{
-			if(str == split)
+			if (str == split)
 			{
-				if(!seg)
+				if (!seg)
 				{
 					add(&sprite);
 
@@ -244,7 +249,7 @@ struct SpriteSheet
 		}
 		fclose(f);
 
-		if(height > 0)
+		if (height > 0)
 			add(&sprite);
 		delete str2;
 	}
@@ -305,8 +310,8 @@ struct SpriteSheet
 
 	void remove(const char* tag)
 	{
-		for(int a = 0; a < size(); a++)
-			if(m_sheet[0][a]->getTag() == tag)
+		for (int a = 0; a < size(); a++)
+			if (m_sheet[0][a]->getTag() == tag)
 			{
 
 				//delete m_sheet[0][a];
@@ -339,8 +344,8 @@ struct SpriteSheet
 
 	Sprite& at(const char* tag)
 	{
-		for(int a = 0; a < size(); a++)
-			if(m_sheet[0][a]->getTag() == tag)
+		for (int a = 0; a < size(); a++)
+			if (m_sheet[0][a]->getTag() == tag)
 				return *m_sheet[0][a];
 		return *m_sheet[0][size()];
 	}
@@ -400,9 +405,9 @@ struct MouseInput
 
 	static bool stroke(MouseButtons button)
 	{
-		if(GetAsyncKeyState(button))
+		if (GetAsyncKeyState(button))
 			buttons[button] = true;
-		else if(!GetAsyncKeyState(button) && buttons[button])
+		if (!GetAsyncKeyState(button) && buttons[button])
 			return (buttons[button] = false, true);
 
 		return false;
@@ -415,33 +420,33 @@ struct MouseInput
 		INPUT_RECORD irBuff[128];
 
 		GetNumberOfConsoleInputEvents(GetStdHandle(STD_INPUT_HANDLE), &numEvents);
-		if(numEvents)
+		if (numEvents)
 			ReadConsoleInputA(
-			GetStdHandle(STD_INPUT_HANDLE),      // input buffer handle 
-			irBuff,      // buffer to read into 
-			128,         // size of read buffer 
-			&numEvents);
+				GetStdHandle(STD_INPUT_HANDLE),      // input buffer handle 
+				irBuff,      // buffer to read into 
+				128,         // size of read buffer 
+				&numEvents);
 
-		for(int a = 0; a < numEvents; a++)
+		for (int a = 0; a < numEvents; a++)
 		{
-			switch(irBuff[a].EventType)
+			switch (irBuff[a].EventType)
 			{
 			case MOUSE_EVENT: // mouse input 
 				MOUSE_EVENT_RECORD mer = irBuff[a].Event.MouseEvent;
-				switch(mer.dwEventFlags)
+				switch (mer.dwEventFlags)
 				{
 				case DOUBLE_CLICK:
 					doubleClick = true;
 					break;
 
 				case MOUSE_MOVED:
-					position = {mer.dwMousePosition.X, mer.dwMousePosition.Y};
+					position = { mer.dwMousePosition.X, mer.dwMousePosition.Y };
 					break;
 				case MOUSE_WHEELED://vertical
-					vertWheel += (int) mer.dwButtonState / std::abs((int) mer.dwButtonState);
+					vertWheel += (int)mer.dwButtonState / std::abs((int)mer.dwButtonState);
 					break;
 				case MOUSE_HWHEELED://horizontal
-					horiWheel += (int) mer.dwButtonState / std::abs((int) mer.dwButtonState);
+					horiWheel += (int)mer.dwButtonState / std::abs((int)mer.dwButtonState);
 					break;
 				}
 
@@ -451,6 +456,7 @@ struct MouseInput
 
 
 	}
+
 private:
 	static std::map <short, bool> buttons;
 };
@@ -948,7 +954,7 @@ private:
 	COORD _cursorPosition;
 	HANDLE _con[2], _input;
 	INPUT_RECORD _inputRecord[128];
-	COORD _sz = {0,0};
+	COORD _sz = { 0,0 };
 	float _conWidth, _conHeight;
 	bool _buff = 0, _resizable, _full = 0;
 
