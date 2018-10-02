@@ -2,6 +2,13 @@
 
 XinputDevice XinputManager::controllers[4];
 
+void XinputManager::update()
+{
+	for (int index = 0; index < 4; index++)
+		if (controllerConnected(index))
+			controllers[index].update();
+}
+
 bool XinputManager::controllerConnected(int index)
 {
 	XINPUT_STATE connected;

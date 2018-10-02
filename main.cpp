@@ -13,11 +13,19 @@ using namespace std;
 namespace fs = experimental::filesystem;
 #pragma endregion
 
-#pragma region Type Deffines
+#pragma region Deffines
 
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long long ullong;
+
+#define select (KeyInput::stroke('A') || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_FRET_GREEN))
+#define deselect (KeyInput::stroke('S') || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_FRET_RED))
+#define guitarstart (KeyInput::stroke(VK_RETURN) || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_START))
+#define guitarback (KeyInput::stroke(VK_BACK) || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_BACK))
+#define goup   (KeyInput::stroke(VK_UP) || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP))
+#define godown (KeyInput::stroke(VK_DOWN) || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN))
+
 #pragma endregion
 
 #pragma region Global Variables
@@ -634,7 +642,7 @@ void playPauseMenu()
 
 	sound->pauseAll();
 
-	if ((KeyInput::press('S') || KeyInput::stroke(VK_BACK)) && !selected)
+	if (((KeyInput::press('S') || XinputManager::getController(0)->isButtonPressed(GUITAR_FRET_RED))|| guitarback) && !selected)
 	{
 		sound->playAll();
 		paused = false;
@@ -643,24 +651,24 @@ void playPauseMenu()
 	}
 	paused = true;
 
-	if ((KeyInput::stroke('A') ||
-		([&]()->bool
+	if ((select ||
+		(MouseInput::stroke(LEFT_CLICK) && [&]()->bool
 	{
 		for (uint a = 0; a < optAmount; a++)
-		{			 
+		{
 			if (Sprite({ options[a] }).mouseCollision({ short(con->getWidth() / 2 - ((options[a]).size() / 2)), short(ceil(con->getHeight() / 4.5f) + a * 2) }, MouseInput::position))
 				return true;
 		}return false;
-	}() && MouseInput::stroke(LEFT_CLICK)) ||
-		KeyInput::stroke(VK_RETURN)) || (selected&&KeyInput::stroke('S')))
+	}()) ||
+		guitarstart) || (deselect && selected))
 		selected = !selected,
 		std::swap(colours[1], colours[2]);
 
 	if (!selected)
 	{
-		if (KeyInput::stroke(VK_UP))
+		if (goup)
 			selection > 0 ? selection-- : selection = optAmount - 1;
-		else if (KeyInput::stroke(VK_DOWN))
+		else if (godown)
 			selection + 1 < optAmount ? selection++ : selection = 0;
 
 		MouseInput::update();
@@ -693,7 +701,7 @@ void playPauseMenu()
 			return;
 		case 2://speed
 			bool newSpeed;
-			if ((newSpeed = KeyInput::stroke(VK_DOWN)) || KeyInput::stroke(VK_UP))
+			if ((newSpeed = goup) || godown)
 				if (((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25))) > 0 && ((float)(*notes)[0].getHeight() /
 					((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) -
 					((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) - spacingScale * 2) * 2))) > 0)
@@ -824,13 +832,14 @@ void playSongMovement()
 
 void playButtonPress()
 {
-	static char frets[] = { 'A','S','D','F','G' };
-
+	XinputManager::update();
+	static char keyfrets[]{ 'A','S','D','F','G' };
+	static uint guitarfrets[]{ GUITAR_FRET_GREEN,GUITAR_FRET_RED,GUITAR_FRET_YELLOW,GUITAR_FRET_BLUE,GUITAR_FRET_ORANGE };
 	//Key Stroke
 	if (KeyInput::stroke('R'))
 		reset();
 
-	if (paused || KeyInput::stroke(VK_RETURN))
+	if (paused || guitarstart)
 		playPauseMenu();
 
 	//Strumming
@@ -848,12 +857,31 @@ void playButtonPress()
 				noteSpeed = spacingScale * 2,
 				noteSpeed *= (speedPercent += (newSpeed ? .25 : -.25));
 
+		//Note lights
+		for (short a = 0; a < 5; a++)
+		{
+			if (KeyInput::release(keyfrets[a])&& XinputManager::getController(0)->isButtonReleased(guitarfrets[a]))
+			{
+				pressed[a] = false;
+				if ((*fretColour)[a] > 8)
+					(*fretColour)[a] -= 8;
+			}
+			else if (KeyInput::press(keyfrets[a]) || XinputManager::getController(0)->isButtonPressed(guitarfrets[a]))
+			{
+				pressed[a] = true;
+				if ((*fretColour)[a] < 8)
+					(*fretColour)[a] += 8;
+			}
+		}
+
 		//Strum released
-		if ((KeyInput::release(VK_UP) && KeyInput::release(VK_DOWN)))
+		if (((KeyInput::release(VK_UP) && XinputManager::getController(0)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP)) &&
+			(KeyInput::release(VK_DOWN) && XinputManager::getController(0)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN))))
 			stroke = false;
 
 		//Strum pressed
-		if ((KeyInput::press(VK_UP) || KeyInput::press(VK_DOWN)) && !stroke)
+		if (((KeyInput::press(VK_UP) || XinputManager::getController(0)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP)) ||
+			(KeyInput::press(VK_DOWN) || XinputManager::getController(0)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN))) && !stroke)
 		{
 			if (collision())
 			{
@@ -868,22 +896,6 @@ void playButtonPress()
 		}
 	}
 
-	//Note light
-	for (short a = 0; a < 5; a++)
-	{
-		if (KeyInput::release(frets[a]))
-		{
-			pressed[a] = false;
-			if ((*fretColour)[a] > 8)
-				(*fretColour)[a] -= 8;
-		}
-		else if (KeyInput::press(frets[a]))
-		{
-			pressed[a] = true;
-			if ((*fretColour)[a] < 8)
-				(*fretColour)[a] += 8;
-		}
-	}
 }
 
 void playTrack()
@@ -903,15 +915,15 @@ void playTrack()
 	con->toConsoleBuffer(*percentstr, con->getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
 
 	// draws frets that lightup when key is pressed
-	for(short a = 0; a < 5; a++)
-		con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
+	for (short a = 0; a < 5; a++)
+		con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
 
 	ushort a;
 	con->toConsoleBuffer(L"┏━┓", 0, con->getHeight() - 24);
-	for(a = 2; a <= 23; a++)
+	for (a = 2; a <= 23; a++)
 		con->toConsoleBuffer(L"┃ ┃", 0, con->getHeight() - a);
-	for(a = 2; a <= 15; a++)
-		con->toConsoleBuffer(L"█", 1, con->getHeight() - a,FG_GREEN);
+	for (a = 2; a <= 15; a++)
+		con->toConsoleBuffer(L"█", 1, con->getHeight() - a, FG_GREEN);
 
 	con->toConsoleBuffer(L"┗━┛", 0, con->getHeight() - 1);
 
@@ -924,11 +936,14 @@ void playTrack()
 
 void songChoiceMovement(int size)
 {
+	
 	static short delay = 15;
 	if (songChoiceCounter++ == delay)
 	{
 		songChoiceCounter = 0;
-		if (KeyInput::press(VK_DOWN))
+		
+		if (KeyInput::press(VK_DOWN) || XinputManager::getController(0)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN))
+
 		{
 			sound->setMasterVolume(1);
 			if (songChoice < size - 1)
@@ -939,7 +954,7 @@ void songChoiceMovement(int size)
 			sound->setVolume(2);
 			sound->play();
 		}
-		else if (KeyInput::press(VK_UP))
+		else if (KeyInput::press(VK_UP) || XinputManager::getController(0)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP))
 		{
 			sound->setMasterVolume(1);
 			if (songChoice > 0)
@@ -951,7 +966,7 @@ void songChoiceMovement(int size)
 			sound->play();
 		}
 	}
-	if (KeyInput::release(VK_DOWN) && KeyInput::release(VK_UP))
+	if (XinputManager::getController(0)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN) && KeyInput::release(VK_DOWN) && XinputManager::getController(0)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP) && KeyInput::release(VK_UP))
 		songChoiceCounter = delay;
 
 }
@@ -969,10 +984,11 @@ bool createdSongList()
 
 	while (true)
 	{
-		KeyInput::press(VK_RETURN);//eat this input;
+		guitarstart;//eat this input;
 		KeyInput::press('Q');//eat this input;
+		XinputManager::update();
 
-		if ((KeyInput::stroke('A') || MouseInput::stroke(LEFT_CLICK)))
+		if ((select || MouseInput::stroke(LEFT_CLICK)))
 		{
 			if (![&]()->bool
 			{
@@ -1012,7 +1028,7 @@ bool createdSongList()
 				}
 
 		}
-		if (KeyInput::stroke('S'))
+		if (deselect)
 		{
 			if (path == L"songs/")
 			{
@@ -1287,7 +1303,7 @@ void controles()
 {
 	Sprite controles;
 	controles.create("Game Files/Controles.txt");
-	while (!KeyInput::stroke('A') && !KeyInput::stroke('S'))
+	while ((XinputManager::update(),!select && !deselect))
 		con->toConsoleBuffer(controles, con->getWidth() / 2 - controles.getWidth() / 2, con->getHeight() / 2 - controles.getHeight() / 2),
 		con->drawConsole();
 }
@@ -1314,20 +1330,20 @@ bool difficultyMenu()
 
 	while (true)
 	{
-
+		XinputManager::update();
 
 		KeyInput::press(VK_RETURN);//eat this input;
-		if (KeyInput::stroke('S'))
+		if (deselect)
 			return false;
-		if (KeyInput::stroke('A') || MouseInput::stroke(LEFT_CLICK))
+		if (select || MouseInput::stroke(LEFT_CLICK))
 			return true;
 
 		x = con->getWidth() / 2 - ceil((float)box->getWidth() / 2), y = con->getHeight() / 2 - 5;
-		if (KeyInput::stroke(VK_UP))
+		if (goup)
 			sound->createSound("sfx/Miss_2.wav"),
 			sound->play(),
 			counter--;
-		if (KeyInput::stroke(VK_DOWN))
+		if (godown)
 			sound->createSound("sfx/Miss_2.wav"),
 			sound->play(),
 			counter++;
@@ -1383,7 +1399,6 @@ bool startScreen()
 	Sprite thing;
 	sound->createStream("Game Files/A_rock_song_idea.mp3");
 	sound->play(true);
-	XinputDevice *controller;
 
 	while (!exit)
 	{
@@ -1399,12 +1414,13 @@ bool startScreen()
 
 		MouseInput::stroke(LEFT_CLICK);//eat this input
 		x = con->getWidth() / 2 - (*box).getWidth() / 2, y = con->getHeight() / 2 - (2 * (box->getHeight() / 2));
+		XinputManager::update();
 
-		if (KeyInput::stroke(VK_UP))
+		if (goup)
 			sound->createSound("sfx/Miss_2.wav"),
 			sound->play(),
 			create--;
-		if (KeyInput::stroke(VK_DOWN))
+		if (godown)
 			sound->createSound("sfx/Miss_2.wav"),
 			sound->play(),
 			create++;
@@ -1430,12 +1446,12 @@ bool startScreen()
 
 		con->drawConsole();
 
-		KeyInput::press('S');//eat this input
+		deselect;//eat this input
 
-		if (KeyInput::stroke('Q'))
+		if (KeyInput::stroke('Q') || XinputManager::getController(0)->isButtonStroked(GUITAR_INPUT_BUTTONS::GUITAR_BACK))
 			return false;
 
-		if (KeyInput::stroke('A') || enter)
+		if (select || enter)
 			switch (create)
 			{
 			case 0:

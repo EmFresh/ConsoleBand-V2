@@ -14,7 +14,7 @@ enum CONTROLLER_TYPE
 
 
 //Buttons used for Normal controllers
-enum CONTROLLER_INPUT_BUTTONS
+enum class CONTROLLER_INPUT_BUTTONS
 {
 	CONTROLLER_DPAD_UP = XINPUT_GAMEPAD_DPAD_UP,
 	CONTROLLER_DPAD_DOWN = XINPUT_GAMEPAD_DPAD_DOWN,
@@ -33,7 +33,7 @@ enum CONTROLLER_INPUT_BUTTONS
 };
 
 //Buttons used for Guitar controllers
-enum GUITAR_INPUT_BUTTONS
+enum  GUITAR_INPUT_BUTTONS
 {
 	GUITAR_DPAD_UP = XINPUT_GAMEPAD_DPAD_UP,
 	GUITAR_DPAD_DOWN = XINPUT_GAMEPAD_DPAD_DOWN,
@@ -46,13 +46,13 @@ enum GUITAR_INPUT_BUTTONS
 	GUITAR_FRET_ORANGE = XINPUT_GAMEPAD_LEFT_SHOULDER,
 	GUITAR_STRUM_UP = GUITAR_DPAD_UP,
 	GUITAR_STRUM_DOWN = GUITAR_DPAD_DOWN,
-	GUITAR_SELECT = XINPUT_GAMEPAD_BACK,
+	GUITAR_BACK = XINPUT_GAMEPAD_BACK,
 	GUITAR_START = XINPUT_GAMEPAD_START
 
 };
 
 //Buttons used for Drum controllers
-enum DRUM_INPUT_BUTTONS
+enum class DRUM_INPUT_BUTTONS
 {
 	DPAD_UP,
 	DPAD_DOWN,
@@ -91,34 +91,26 @@ struct XinputDevice
 
 	virtual int getButtonBitmask()
 	{
-		update();
 		return info.Gamepad.wButtons > 0 ? info.Gamepad.wButtons : NULL;
 	}
 
 	virtual bool isButtonPressed(int bitmask)
 	{
-		update();
-		return info.Gamepad.wButtons == bitmask;
+		return info.Gamepad.wButtons & bitmask;
 	}
 
 	virtual bool isButtonReleased(int bitmask)
 	{
-		update();
-		return info.Gamepad.wButtons != bitmask;
+		return !isButtonPressed(bitmask);
 	}
 
 	virtual bool isButtonStroked(int bitmask)
 	{
-		update();
 		if (isButtonPressed(bitmask))
 			stroke[bitmask] = true;
-
-		if (stroke[bitmask] && !isButtonReleased(bitmask))
-		{
-			stroke[bitmask] = false;
-			return true;
-		}
-
+		else if (stroke[bitmask] && isButtonReleased(bitmask))
+			return (stroke[bitmask] = false, true);
+			   
 		return false;
 	}
 
@@ -139,7 +131,6 @@ struct XinputGuitar :public XinputDevice
 
 	int getFrets()
 	{
-		update();
 		return info.Gamepad.wButtons;
 	}
 
@@ -148,14 +139,14 @@ struct XinputGuitar :public XinputDevice
 		return info.Gamepad.wButtons == bitmask;
 	}
 
-	bool isFretReleased(int bitmask) 
-	{ 
-		return info.Gamepad.wButtons != bitmask; 
+	bool isFretReleased(int bitmask)
+	{
+		return info.Gamepad.wButtons != bitmask;
 	}
 
-	bool isFretStroked(int bitmask) 
+	bool isFretStroked(int bitmask)
 	{
-		return isButtonStroked(bitmask);
+		return XinputDevice::isButtonStroked(bitmask);
 	}
 
 private:
@@ -179,8 +170,6 @@ struct XinputController :public XinputDevice
 
 	Stick* getSticks(Stick sticks[2])
 	{
-		update();
-
 		sticks[0].
 			x = abs(info.Gamepad.sThumbLX < 0 ? (float)info.Gamepad.sThumbLX / 32768 : (float)info.Gamepad.sThumbLX / 32767) > deadZoneStick ?
 			info.Gamepad.sThumbLX < 0 ? (float)info.Gamepad.sThumbLX / 32768 : (float)info.Gamepad.sThumbLX / 32767 : 0;
@@ -194,20 +183,15 @@ struct XinputController :public XinputDevice
 		sticks[1].
 			y = abs(info.Gamepad.sThumbRY < 0 ? (float)info.Gamepad.sThumbRY / 32768 : (float)info.Gamepad.sThumbRY / 32767) > deadZoneStick ?
 			info.Gamepad.sThumbRY < 0 ? (float)info.Gamepad.sThumbRY / 32768 : (float)info.Gamepad.sThumbRY / 32767 : 0;
-
-		
 	}
 
 	//
 	void getTriggers(Triggers& triggers)
 	{
-		
 		triggers = { (float)info.Gamepad.bLeftTrigger / 255,  (float)info.Gamepad.bRightTrigger / 255 };
 	}
 
 private:
-
-
 	DWORD buttons;
 	float LT, RT;
 };
@@ -215,7 +199,10 @@ private:
 class XinputManager
 {
 public:
-	//gets the amount of controllers connected (up to 4) from index 0 -> 3 (inclusive)
+	//updates all controllers at once
+	static void update();
+
+	//checks if the controller from index 0 -> 3 (inclusive) is connected (up to 4 controllers)
 	static bool controllerConnected(int index);
 
 	//gets the type of controller that is connected to the computer 
@@ -223,7 +210,6 @@ public:
 
 	//gets the controller from index 0 -> 3 (inclusive)
 	static XinputDevice* getController(int index);
-
 private:
 	static	XinputDevice controllers[4];
 };
