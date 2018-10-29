@@ -778,6 +778,8 @@ void playPauseMenu()
 
 	for (uint a = 0; a < optAmount; a++)
 		con->toConsoleBuffer(options[a], con->getWidth() / 2 - ((options[a]).size() / 2), ceil(con->getHeight() / 4.5f) + a * 2, colours[selection == a]);
+
+	paused = true;
 }
 
 void playSongMovement()
@@ -878,11 +880,13 @@ void playButtonPress()
 	static uint guitarfrets[]{ GUITAR_FRET_GREEN, GUITAR_FRET_RED, GUITAR_FRET_YELLOW, GUITAR_FRET_BLUE, GUITAR_FRET_ORANGE };
 	static short lastStrum = -1, currentStrum = -1;
 	static bool stroke;
+
 	//Key Stroke
 	if (KeyInput::stroke('R'))
 		reset();
-
-	if (paused || guitarstart)
+	//unsigned length;
+	//sound->getAudio()[0][0]->getLength(&length, FMOD_TIMEUNIT_MS);
+	if (paused || guitarstart )
 		playPauseMenu();
 
 	bool up = 0, down = 0;
