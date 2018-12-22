@@ -3,3 +3,9 @@ Release/
 Debug/
 
 \.vs/
+
+*.zip
+
+Console Band \(Less songs\)/
+
+*.a

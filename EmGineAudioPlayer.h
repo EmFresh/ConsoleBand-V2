@@ -2,8 +2,11 @@
 #include <FMOD/fmod.hpp>
 #include <vector>
 
-typedef  FMOD::System AudioSystem;
+typedef FMOD::System AudioSystem;
 typedef FMOD::Sound Audio;
+typedef FMOD::Channel AudioChannel;
+typedef FMOD::ChannelGroup AudioChannelGroup;
+
 typedef unsigned int uint;
 
 class EmGineAudioPlayer
@@ -14,10 +17,9 @@ public:
 
 	static void init(int channels = 36);
 
+	void createAudio(const char* file);
 
-	void createSound(const char* file);
-
-	void createStream(const char* file);
+	void createAudioStream(const char* file);
 
 	void play(bool loop = false, bool newInstance = false, uint index = (m_channels->size() - 1),
 			  uint from = 0, uint to = 0, FMOD_TIMEUNIT unit = FMOD_TIMEUNIT_MS);
@@ -49,14 +51,14 @@ public:
 	**increasing level above the normal level may resault in distortion.
 	*/
 	void setVolume(float vol, uint index = (m_channels->size() - 1));
-	
+
 	void setMasterVolume(float vol);
-	
+
 	static AudioSystem* getAudioSystem();
 
-	static FMOD::ChannelGroup* getMasterChannelGroup();
+	static AudioChannelGroup* getMasterChannelGroup();
 
-	static std::vector<FMOD::Channel*>* getChannels();
+	static std::vector<AudioChannel*>* getChannels();
 
 	static std::vector<Audio*>* getAudio();
 
@@ -67,9 +69,12 @@ private:
 
 	static void cleanup();
 
+	static FMOD_RESULT __stdcall cleanUpCallback(FMOD_CHANNELCONTROL *chanCtrl, FMOD_CHANNELCONTROL_TYPE ctrlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void *commandData1, void *commandData2);
+
+	static uint stopIndex;
 	static AudioSystem* m_system;
-	static FMOD::ChannelGroup* m_mainChannelGroup;
-	static std::vector<FMOD::Channel*>* m_channels;
+	static AudioChannelGroup* m_mainChannelGroup;
+	static std::vector<AudioChannel*>* m_channels;
 	static std::vector<Audio*>* m_sounds;
 };
 

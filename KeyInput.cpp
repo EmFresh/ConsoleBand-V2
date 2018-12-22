@@ -35,7 +35,7 @@ const char* KeyInput::type()
 	if(!press(pressed) && pressed != 0)
 		count2 = wait2;
 
-	if((length > -1 ? typing.size() < length : false))
+	if((length > -1 ? typing.size() < (unsigned)length : false))
 	{
 		if(count2++ >= wait2)
 		{
@@ -49,7 +49,7 @@ const char* KeyInput::type()
 					if(!press(VK_SHIFT))
 					{
 						wait2 = amount;
-						return (typing += a).c_str();
+						return (typing += (char)a).c_str();
 					} else
 					{
 						wait2 = amount;
@@ -82,7 +82,7 @@ const char* KeyInput::type()
 					if(press(VK_SHIFT) || GetKeyState(VK_CAPITAL))
 					{
 						wait2 = amount;
-						return (typing += a).c_str();
+						return (typing += (char)a).c_str();
 					} else
 					{
 						wait2 = amount;
