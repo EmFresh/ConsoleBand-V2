@@ -70,10 +70,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(OutDir)</IntDir>
     <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
@@ -88,18 +89,21 @@
     <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(OutDir)</IntDir>
     <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4244;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Xinput.lib;fmod_vc.lib;midifile_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
