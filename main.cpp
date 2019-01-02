@@ -929,7 +929,7 @@ void playPauseMenu()
 					swprintf_s(percent, speedPercent != 1 ? L": %.2f%%" : L": normal", abs(2 - speedPercent));
 					options[2] += percent;
 					break;
-				case 3:
+				case 3://change difficulty
 					con->clearConsole();
 					difficultyMenu();
 					openSong(songDir);
@@ -1675,7 +1675,7 @@ bool difficultyMenu()
 
 	static int selectx = 0, selecty = 0;
 	ushort numBoxes = 4, x = 0, y = 0, colours[]{FG_WHITE,FG_GREEN | FG_INTENSIFY};
-	string instruments[]{"guitar","bass","drum"}, instruments2[]{"guitar","rhythm","drum"};
+	string instruments[]{"GUITAR","BASS","DRUM"}, instruments2[]{"guitar","rhythm","drum"};
 	wstring options[]{L"Easy",L"Medium",L"Hard",L"Expert"};
 	wstring noteMsg[]{L"Select",L"Back"}, noteKey[]{L"A",L"S"};
 	ullong clock;
