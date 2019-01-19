@@ -6,8 +6,7 @@
 uint EmGineAudioPlayer::stopIndex = 0;
 AudioSystem *EmGineAudioPlayer::m_system;
 AudioChannelGroup* EmGineAudioPlayer::m_mainChannelGroup;
-std::vector<AudioChannel*>* EmGineAudioPlayer::m_channels;
-std::vector<Audio*>* EmGineAudioPlayer::m_sounds;
+std::vector<AudioControle*>* EmGineAudioPlayer::m_controle;
 #pragma endregion
 
 void EmGineAudioPlayer::init(int channels)
@@ -15,8 +14,8 @@ void EmGineAudioPlayer::init(int channels)
 	if(m_system)
 		return;
 
-	m_channels = new std::vector<AudioChannel*>;
-	m_sounds = new std::vector<Audio*>;
+	m_controle = new std::vector<AudioControle*>;
+	//m_controle = new std::vector<Audio*>;
 
 	if(FMOD::System_Create(&m_system))
 		return;
@@ -32,10 +31,8 @@ void EmGineAudioPlayer::disable()
 {
 	m_system->release();
 	m_system->close();
-	m_sounds->clear();
-	m_channels->clear();
+	m_controle->clear();
 }
-
 
 void EmGineAudioPlayer::createAudio(const char * file)
 {
@@ -46,11 +43,11 @@ void EmGineAudioPlayer::createAudio(const char * file)
 		OutputDebugStringA("failed to create Audio\n");
 		return;
 	}
-	m_sounds->push_back(newSound);
-	m_channels->push_back(nullptr);
+	m_controle->push_back(new AudioControle{newSound,nullptr});
+	//m_controle->push_back(nullptr);
 
-	m_system->playSound(m_sounds[0][m_sounds->size() - 1], m_mainChannelGroup, false, &m_channels->back());
-	m_channels->back()->setCallback(cleanUpCallback);
+	m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel);
+	m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
 void EmGineAudioPlayer::createAudioStream(const char * file)
@@ -61,32 +58,31 @@ void EmGineAudioPlayer::createAudioStream(const char * file)
 		OutputDebugStringA("failed to create Audio Stream\n");
 		return;
 	}
-	m_sounds->push_back(newSound);
-	m_channels->push_back(nullptr);
+	m_controle->push_back(new AudioControle{newSound,nullptr});
 
-	m_system->playSound(m_sounds[0][m_sounds->size() - 1], m_mainChannelGroup, false, &m_channels->back());
-	m_channels->back()->setCallback(cleanUpCallback);
+	m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel);
+	m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
 void EmGineAudioPlayer::play(bool loop, bool newInst, uint index, uint from, uint to, FMOD_TIMEUNIT unit)
 {
-	if(newInst && m_channels[0][index])
-		m_sounds->push_back(m_sounds[0][index]),
-		m_channels->push_back(nullptr),
-		index = m_channels->size() - 1;
+	if(newInst && m_controle[0][index])
+		m_controle->push_back(m_controle[0][index]),
+		m_controle->push_back(nullptr),
+		index = m_controle->size() - 1;
 
 
-	if(!m_channels[0][index] || (m_channels[0][index] ? isStoped(index) : false))
-		m_system->playSound(m_sounds[0][index], nullptr, true, &m_channels[0][index]);
+	if(!m_controle[0][index] || (m_controle[0][index] ? isStoped(index) : false))
+		m_system->playSound(m_controle[0][index]->sound, nullptr, true, &m_controle[0][index]->channel);
 
 	if(loop)
-		m_channels[0][index]->setMode(FMOD_LOOP_NORMAL),
-		m_channels[0][index]->setLoopCount(-1),
-		from < to ? m_channels[0][index]->setLoopPoints(from, unit, to, unit) : NULL;
+		m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL),
+		m_controle[0][index]->channel->setLoopCount(-1),
+		from < to ? m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit) : NULL;
 	else
-		m_channels[0][index]->setMode(FMOD_LOOP_OFF);
+		m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF);
 
-	m_channels[0][index]->setPaused(false);
+	m_controle[0][index]->channel->setPaused(false);
 	//cleanup();
 }
 
@@ -101,35 +97,35 @@ void EmGineAudioPlayer::playAll(bool loop, uint from, uint to, FMOD_TIMEUNIT uni
 	m_system->getMasterChannelGroup(&cg);
 	uint length;
 	cg->setPaused(true);
-	for(uint index = 0; index < m_channels->size(); index++)
+	for(uint index = 0; index < m_controle->size(); index++)
 		if(loop)
 		{
 
-			m_channels[0][index]->setPosition(from, unit);//fixes the issue for streemed audio
+			m_controle[0][index]->channel->setPosition(from, unit);//fixes the issue for streamed audio
 
 
-			m_channels[0][index]->setMode(FMOD_LOOP_NORMAL);
-			m_sounds[0][index]->getLength(&length, unit);
+			m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL);
+			m_controle[0][index]->sound->getLength(&length, unit);
 
 			from < to && from >= 0 ? to < length ?
-				m_channels[0][index]->setLoopPoints(from, unit, to, unit)/*true*/ :
-				m_channels[0][index]->setLoopPoints(from, unit, length - 1, unit)/*false*/ : NULL/*else*/;
+				m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit)/*true*/ :
+				m_controle[0][index]->channel->setLoopPoints(from, unit, length - 1, unit)/*false*/ : NULL/*else*/;
 
-			m_channels[0][index]->setLoopCount(-1);
+			m_controle[0][index]->channel->setLoopCount(-1);
 
 		}
 		else
-			m_channels[0][index]->setMode(FMOD_LOOP_OFF);
+			m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF);
 	OutputDebugStringA("\n\n");
 
-	for(auto &a : m_channels[0])
-		a->setPaused(false);
+	for(auto &a : *m_controle)
+		a->channel->setPaused(false);
 	cg->setPaused(false);
 }
 
 void EmGineAudioPlayer::pause(uint index)
 {
-	m_channels[0][index]->setPaused(true);
+	m_controle[0][index]->channel->setPaused(true);
 }
 
 void EmGineAudioPlayer::pauseAll()
@@ -137,14 +133,14 @@ void EmGineAudioPlayer::pauseAll()
 	AudioChannelGroup* cg;
 	m_system->getMasterChannelGroup(&cg);
 	cg->setPaused(true);
-	for(auto &a : m_channels[0])
-		a->setPaused(true);
+	for(auto &a : *m_controle)
+		a->channel->setPaused(true);
 }
 
 void EmGineAudioPlayer::stop(uint index)
 {
 	stopIndex = index;
-	m_channels[0][index]->stop();
+	m_controle[0][index]->channel->stop();
 }
 
 void EmGineAudioPlayer::stopAll()
@@ -155,47 +151,47 @@ void EmGineAudioPlayer::stopAll()
 	cg->getPaused(&paused);
 	cg->setPaused(true);
 
-	while(0 < m_channels->size())
+	while(0 < m_controle->size())
 	{
 		stopIndex = 0;
-		if(m_channels[0][0])
-			m_channels[0][0]->stop();
-		else
-			m_channels->erase(m_channels->begin());
+		//if(m_controle[0][0]->channel)
+			m_controle[0][0]->channel->stop();
+		//else
+		//	m_controle->erase(m_controle->begin());
 	}
 	update();
 	cg->setPaused(paused);
 }
 
-uint EmGineAudioPlayer::getPosition(uint index)
+uint EmGineAudioPlayer::getPosition(uint index, FMOD_TIMEUNIT type)
 {
 	uint pos;
-	m_channels[0][index]->getPosition(&pos, FMOD_TIMEUNIT_MS);
+	m_controle[0][index]->channel->getPosition(&pos, type);
 	return pos;
 }
 
 bool EmGineAudioPlayer::isStoped(uint index)
 {
 	bool play;
-	m_channels[0][index]->isPlaying(&play);
+	m_controle[0][index]->channel->isPlaying(&play);
 	return !play;
 }
 
 bool EmGineAudioPlayer::isPaused(uint index)
 {
 	bool pause;
-	m_channels[0][index]->getPaused(&pause);
+	m_controle[0][index]->channel->getPaused(&pause);
 	return pause;
 }
 
 uint EmGineAudioPlayer::size()
 {
-	return m_channels->size();
+	return m_controle->size();
 }
 
 void EmGineAudioPlayer::setVolume(float vol, uint index)
 {
-	m_channels[0][index]->setVolume(vol);
+	m_controle[0][index]->channel->setVolume(vol);
 }
 
 void EmGineAudioPlayer::setMasterVolume(float vol)
@@ -213,8 +209,8 @@ AudioSystem * EmGineAudioPlayer::getAudioSystem()
 void EmGineAudioPlayer::mute(uint index)
 {
 	bool mute;
-	m_channels[0][index]->getMute(&mute);
-	m_channels[0][index]->setMute(!mute);
+	m_controle[0][index]->channel->getMute(&mute);
+	m_controle[0][index]->channel->setMute(!mute);
 }
 
 void EmGineAudioPlayer::muteAll()
@@ -233,14 +229,9 @@ FMOD::ChannelGroup * EmGineAudioPlayer::getMasterChannelGroup()
 	return cg;
 }
 
-std::vector<AudioChannel*>* EmGineAudioPlayer::getChannels()
+std::vector<AudioControle*>* EmGineAudioPlayer::getAudioControle()
 {
-	return m_channels;
-}
-
-std::vector<Audio*>* EmGineAudioPlayer::getAudio()
-{
-	return m_sounds;
+	return m_controle;
 }
 
 void EmGineAudioPlayer::update()
@@ -252,23 +243,22 @@ void EmGineAudioPlayer::cleanup()
 {
 	bool play;
 
-	for(unsigned a = 0; a < m_channels->size(); a++)
+	for(unsigned a = 0; a < m_controle->size(); a++)
 	{
-		m_channels[0][a]->isPlaying(&play);
+		m_controle[0][a]->channel->isPlaying(&play);
 		if(!play)
 		{
-			m_channels->erase(m_channels->begin() + a);
-			if(find(m_sounds->begin() + a + 1, m_sounds->end(), m_sounds[0][a]) == m_sounds->end())
-				m_sounds[0][a]->release();
-			m_sounds->erase(m_sounds->begin() + a),
-				a--;
+			if(find(m_controle->begin() + a + 1, m_controle->end(), m_controle[0][a]) == m_controle->end())
+				m_controle[0][a]->sound->release();
+			m_controle->erase(m_controle->begin() + a);
+			a--;
 		}
 	}
 }
 
 FMOD_RESULT F_CALLBACK EmGineAudioPlayer::cleanUpCallback(FMOD_CHANNELCONTROL * chanCtrl, FMOD_CHANNELCONTROL_TYPE ctrlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void * commandData1, void * commandData2)
 {
-	callbackType, commandData1, commandData2;//unreferenced but needed
+	callbackType, commandData1, commandData2;//referenced but needed
 
 
 	if(ctrlType == FMOD_CHANNELCONTROL_CHANNEL)
@@ -280,20 +270,17 @@ FMOD_RESULT F_CALLBACK EmGineAudioPlayer::cleanUpCallback(FMOD_CHANNELCONTROL * 
 
 		if(!play)
 		{
-			unsigned a = stopIndex;
-			for(; (a = a > m_channels->size() - 1 ? m_channels->size() - 1 : a) >= 0; a--)
-				if(m_channels[0][a] == channel)
+			int a = stopIndex;
+			for(; a>=0; a--)
+				if(m_controle[0][a]->channel == channel)
 				{
-					m_channels->erase(m_channels->begin() + a);
+					if(find(m_controle->begin() + a + 1, m_controle->end(), m_controle[0][a]) == m_controle->end())
+						m_controle[0][a]->sound->release();
+					m_controle->erase(m_controle->begin() + a);
 
-					if(find(m_sounds->begin() + a + 1, m_sounds->end(), m_sounds[0][a]) == m_sounds->end())
-						m_sounds[0][a]->release();
-
-					m_sounds->erase(m_sounds->begin() + a);
-
-					stopIndex = m_channels->size() - 1;
 					break;
 				}
+			stopIndex = m_controle->size() - 1;
 		}
 	}
 	else

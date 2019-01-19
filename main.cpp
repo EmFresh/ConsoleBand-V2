@@ -527,7 +527,7 @@ void missFX(int seed)
 	char* name = new char[255];
 	for(uint a = 0; a < AudioPlayer::size(); a++)
 	{
-		AudioPlayer::getAudio()->at(a)->getName(name, 255);
+		AudioPlayer::getAudioControle()->at(a)->sound->getName(name, 255);
 		if(strstr(name, instrument.c_str()))
 			AudioPlayer::setVolume(0, a);
 	}
@@ -781,7 +781,7 @@ void drawLines()
 
 	if(!paused)
 	{
-		//create new barlines
+		//create new bar lines
 		while(((*lines)[lines->size() - 1] + incriment / noteSpeed) > spacing / 2)
 			lines->push_back((*lines)[lines->size() - 1] - spacing);
 
@@ -802,7 +802,7 @@ void drawLines()
 			spacing = int((float)(*notes)[0].getHeight() / ((float)spacingScale / (noteSpeed - (noteSpeed - (spacingScale * 2)) * 2)));
 		}
 
-		//deleat old barlines
+		//delete old bar lines
 		while(((*lines)[0] + incriment / noteSpeed) > con->getHeight())
 		{
 			lines->erase(lines->begin());
@@ -977,13 +977,13 @@ void playSongMovement()
 				// moves the song along
 				(*guitarTrackTmp)[a][b] = (*guitarTrack)[a][b] / noteSpeed + incriment / noteSpeed + fretboardPosition;
 
-				//stop checcking if nothing can be seen
+				//stop checking if nothing can be seen
 				if((*guitarTrackTmp)[a][b] <= -3)
 					break;
 
 				if(b > countAmountBass[a])
 				{
-					//note dropoff
+					//note drop off
 					if((*guitarTrackTmp)[a][b - 1] + noteOffset > con->getHeight())
 						countAmountBass[a]++;
 
@@ -1000,7 +1000,7 @@ void playSongMovement()
 							///Normal
 							con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2), (*guitarTrackTmp)[a][b] + noteOffset, (*fretNoteColour)[a]);
 
-							///Colision Test
+							///Collision Test
 							//con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
 							//					 b != colliCount[a] ? (*noteColour)[a] : FG_INTENSIFY | FG_WHITE);
 
@@ -1018,13 +1018,13 @@ void playSongMovement()
 				// moves the song along
 				(*bassTrackTmp)[a][b] = (*bassTrack)[a][b] / noteSpeed + incriment / noteSpeed + fretboardPosition;
 
-				//stop checcking if nothing can be seen
+				//stop checking if nothing can be seen
 				if((*bassTrackTmp)[a][b] <= -3)
 					break;
 
 				if(b > countAmountBass[a])
 				{
-					//note dropoff
+					//note drop off
 					if((*bassTrackTmp)[a][b - 1] + noteOffset > con->getHeight())
 						countAmountBass[a]++;
 
@@ -1041,7 +1041,7 @@ void playSongMovement()
 							///Normal
 							con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2), (*bassTrackTmp)[a][b] + noteOffset, (*fretNoteColour)[a]);
 
-							///Colision Test
+							///Collision Test
 							//con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
 							//					 b != colliCount[a] ? (*noteColour)[a] : FG_INTENSIFY | FG_WHITE);
 
@@ -1058,13 +1058,13 @@ void playSongMovement()
 				// moves the song along
 				(*drumTrackTmp)[a][b] = (*drumTrack)[a][b] / noteSpeed + incriment / noteSpeed + fretboardPosition;
 
-				//stop checcking if nothing can be seen
+				//stop checking if nothing can be seen
 				if((*drumTrackTmp)[a][b] <= -3)
 					break;
 
 				if(b > countAmountDrum[a])
 				{
-					//note dropoff
+					//note drop off
 					if((*drumTrackTmp)[a][b - 1] + noteOffset > con->getHeight())
 						countAmountDrum[a]++;
 
@@ -1298,7 +1298,7 @@ void playTrack()
 	con->toConsoleBuffer(*box, con->getWidth() - (*box).getWidth(), 0);
 	con->toConsoleBuffer(*percentstr, con->getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
 
-	// draws frets that lightup when key is pressed
+	// draws frets that light up when key is pressed
 	if(instrument == "guitar" || instrument == "rhythm")
 		for(short a = 0; a < 5; a++)
 			con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2), fretboardPosition, (*fretColour)[a]);
@@ -1877,7 +1877,7 @@ bool startScreen()
 	int x = con->getWidth() / 2 - box->getWidth() / 2, y = con->getHeight() / 2 - (2 * (box->getHeight() / 2)),
 		colours[] = {FG_WHITE,FG_GREEN | FG_INTENSIFY}, numBoxes = 2;
 	bool exit = false, enter = false;
-	wstring options[]{L"Single Play",L"Controles"}, noteMsg[]{L"Select"}, noteKey[]{L"A"};
+	wstring options[]{L"Single Play",L"Controls"}, noteMsg[]{L"Select"}, noteKey[]{L"A"};
 	Sprite thing;
 	AudioPlayer::createAudioStream("Game Files/A_rock_song_idea.mp3");
 	AudioPlayer::play(true);

@@ -1,6 +1,7 @@
 #pragma once
 #include <FMOD/fmod.hpp>
 #include <vector>
+#include <string>
 
 typedef FMOD::System AudioSystem;
 typedef FMOD::Sound Audio;
@@ -8,6 +9,18 @@ typedef FMOD::Channel AudioChannel;
 typedef FMOD::ChannelGroup AudioChannelGroup;
 
 typedef unsigned int uint;
+
+struct AudioControle
+{
+	~AudioControle()
+	{
+		delete sound;
+		delete channel;
+	}
+	Audio* sound;
+	AudioChannel* channel;
+	std::string tag;
+};
 
 class EmGineAudioPlayer
 {
@@ -18,76 +31,85 @@ public:
 	/*
 	disables the audio system, closing and clearing all open audio instances.
 	NOTE:
-	init must be called before any other calls can be made  
+	EmGineAudioPlayer::init() must be called before any other calls can be made
 	*/
 	static void disable();
 
-	/*
-	creates an audio instance that is stored in memory
-	*/
+	//creates an audio instance that is stored in memory	
 	static void createAudio(const char* file);
 
-	/*
-	creates an audio instance that is read from disk (recomended for large audio files)
-	*/
+	//creates an audio instance that is read from disk (recommended for large audio files)	
 	static void createAudioStream(const char* file);
 
-	/*
-	plays a single audio channel creaded by createAudio/AudioStream() 
-	*/
-	static void play(bool loop = false, bool newInstance = false, uint index = (m_channels->size() - 1),
-			  uint from = 0, uint to = 0, FMOD_TIMEUNIT unit = FMOD_TIMEUNIT_MS);
-	/*
-	plays all existing audio channels creaded by createAudio/AudioStream()
-	*/
-	static void playAll(bool loop = false, uint from = 0, uint to = 0, FMOD_TIMEUNIT unit = FMOD_TIMEUNIT_MS);
-	
-	/*
-	pauses an audio channel at specified index.
-	Note:
-	any stoped audio deleated by cleanup may change original audio index
-	*/
-	static void pause(uint index = (m_channels->size() - 1));
+	//plays a single audio channel created by EmGineAudioPlayer::createAudio/AudioStream()	
+	static void play(bool loop = false, bool newInstance = false, uint index = (m_controle->size() - 1),
+		uint from = 0, uint to = 0, FMOD_TIMEUNIT unit = FMOD_TIMEUNIT_MS);
 
-	/*
-	pauses all audio channels
-	*/
+	//plays all existing audio channels created by EmGineAudioPlayer::createAudio/AudioStream()	
+	static void playAll(bool loop = false, uint from = 0, uint to = 0, FMOD_TIMEUNIT unit = FMOD_TIMEUNIT_MS);
+
+	//pauses an audio channel at specified index.
+	static void pause(uint index = (m_controle->size() - 1));
+
+	//pauses all audio channels	
 	static void pauseAll();
 
+	//stops audio channel at specified index
+	static void stop(uint index = (m_controle->size() - 1));
 
-	static void stop(uint index = (m_channels->size() - 1));
-
+	//stops all audio channels
 	static void stopAll();
 
-	static void mute(uint index = (m_channels->size() - 1));
+	//mutes audio channel at specified index
+	static void mute(uint index = (m_controle->size() - 1));
 
+	//mutes all audio channels
 	static void muteAll();
-	
-	static bool isStoped(uint index = (m_channels->size() - 1));
 
-	static bool isPaused(uint index = (m_channels->size() - 1));
-	
-	static uint getPosition(uint index = (m_channels->size() - 1));
-
-	static uint size();
 	/*
-	**normal volume levels from 0 -> 1.
-	**below 0 will invert sound.
-	**increasing level above the normal level may resault in distortion.
+	checks if audio channel at specified index has stopped playing
+	NOTE:
+	audio is not considered off until audio has reached it's end
+	or EmGineAudioPlayer::stop/stopAll() is called
 	*/
-	static void setVolume(float vol, uint index = (m_channels->size() - 1));
+	static bool isStoped(uint index = (m_controle->size() - 1));
 
+	/*
+	checks if audio channel at specified index has been paused
+	NOTE:
+	audio is not considered off until audio has reached it's end
+	or EmGineAudioPlayer::pause/pauseAll() is called
+	*/
+	static bool isPaused(uint index = (m_controle->size() - 1));
+
+	static uint getPosition(uint index = (m_controle->size() - 1), FMOD_TIMEUNIT type = FMOD_TIMEUNIT_MS);
+
+	//gets the amount of audio channels created
+	static uint size();
+
+	/*
+	sets audio volume at specified index with normal volume levels ranging from 0 -> 1.
+	NOTE:
+	*levels below 0 will invert sound.
+	*increasing level above the normal level may result in distortion.
+	*/
+	static void setVolume(float vol, uint index = (m_controle->size() - 1));
+
+	/*
+	sets the maximum volume levels for all audio channels ranging from 0 -> 1.
+	NOTE:
+	*levels below 0 will invert sound.
+	*increasing level above the normal level may result in distortion.
+	*/
 	static void setMasterVolume(float vol);
 
 	static AudioSystem* getAudioSystem();
 
 	static AudioChannelGroup* getMasterChannelGroup();
 
-	static std::vector<AudioChannel*>* getChannels();
+	static std::vector<AudioControle*>* getAudioControle();
 
-	static std::vector<Audio*>* getAudio();
-
-	//not needed but recomended in certin platforms within their update loop
+	//required for certain functionality (i.e. audio cleanup,3D sound...)
 	static void update();
 
 private:
@@ -99,7 +121,7 @@ private:
 	static uint stopIndex;
 	static AudioSystem* m_system;
 	static AudioChannelGroup* m_mainChannelGroup;
-	static std::vector<AudioChannel*>* m_channels;
-	static std::vector<Audio*>* m_sounds;
+	static std::vector<AudioControle*>* m_controle;
+	//static std::vector<Audio*>* m_sounds;
 };
 
