@@ -1695,6 +1695,7 @@ bool difficultyMenu()
 	while(true)
 	{
 		XinputManager::update();
+		AudioPlayer::update();
 
 		instrument = instruments2[selectx];
 		KeyInput::press(VK_RETURN);//eat this input;
@@ -1886,6 +1887,7 @@ bool startScreen()
 	{
 
 		MouseInput::update();
+		AudioPlayer::update();
 
 		for(int a = 0; a < numBoxes; a++)
 			if(box->mouseCollision({(short)x,short(y + a * 5 + 1)}, MouseInput::position))
@@ -1905,7 +1907,7 @@ bool startScreen()
 			AudioPlayer::createAudioStream("sfx/Guitar_Miss_2.wav"),
 			AudioPlayer::play(),
 			create--;
-		if(godown)
+		else if(godown)
 			AudioPlayer::createAudioStream("sfx/Guitar_Miss_2.wav"),
 			AudioPlayer::play(),
 			create++;

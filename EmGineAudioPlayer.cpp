@@ -1,4 +1,5 @@
 #include "EmGineAudioPlayer.h"
+//#include <iostream>
 #include <string>
 #include <Windows.h>
 
@@ -69,7 +70,8 @@ void EmGineAudioPlayer::play(bool loop, bool newInst, uint index, uint from, uin
 	if(newInst && m_controle[0][index])
 		m_controle->push_back(m_controle[0][index]),
 		m_controle->push_back(nullptr),
-		index = m_controle->size() - 1;
+		index = (uint)m_controle->size() - 1;
+
 
 
 	if(!m_controle[0][index] || (m_controle[0][index] ? isStoped(index) : false))
@@ -151,15 +153,14 @@ void EmGineAudioPlayer::stopAll()
 	cg->getPaused(&paused);
 	cg->setPaused(true);
 
+
+	stopIndex = 0;
+	update();
 	while(0 < m_controle->size())
 	{
-		stopIndex = 0;
-		//if(m_controle[0][0]->channel)
-			m_controle[0][0]->channel->stop();
-		//else
-		//	m_controle->erase(m_controle->begin());
+		m_controle[0][0]->channel->stop();
 	}
-	update();
+
 	cg->setPaused(paused);
 }
 
@@ -186,7 +187,7 @@ bool EmGineAudioPlayer::isPaused(uint index)
 
 uint EmGineAudioPlayer::size()
 {
-	return m_controle->size();
+	return (uint)m_controle->size();
 }
 
 void EmGineAudioPlayer::setVolume(float vol, uint index)
@@ -245,11 +246,13 @@ void EmGineAudioPlayer::cleanup()
 
 	for(unsigned a = 0; a < m_controle->size(); a++)
 	{
-		m_controle[0][a]->channel->isPlaying(&play);
+		AudioChannel *channel = m_controle[0][a]->channel;
+		channel->isPlaying(&play);
 		if(!play)
 		{
 			if(find(m_controle->begin() + a + 1, m_controle->end(), m_controle[0][a]) == m_controle->end())
 				m_controle[0][a]->sound->release();
+
 			m_controle->erase(m_controle->begin() + a);
 			a--;
 		}
@@ -258,11 +261,12 @@ void EmGineAudioPlayer::cleanup()
 
 FMOD_RESULT F_CALLBACK EmGineAudioPlayer::cleanUpCallback(FMOD_CHANNELCONTROL * chanCtrl, FMOD_CHANNELCONTROL_TYPE ctrlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void * commandData1, void * commandData2)
 {
-	callbackType, commandData1, commandData2;//referenced but needed
+	callbackType, commandData1, commandData2;//referenced but not quite needed
 
 
 	if(ctrlType == FMOD_CHANNELCONTROL_CHANNEL)
-	{// Channel specific functions here...
+	{
+		// Channel specific functions here...
 		AudioChannel *channel;
 		channel = (AudioChannel *)chanCtrl;
 		bool play;
@@ -270,8 +274,7 @@ FMOD_RESULT F_CALLBACK EmGineAudioPlayer::cleanUpCallback(FMOD_CHANNELCONTROL * 
 
 		if(!play)
 		{
-			int a = stopIndex;
-			for(; a>=0; a--)
+			for(int a = stopIndex; a < (int)m_controle->size(); a++)
 				if(m_controle[0][a]->channel == channel)
 				{
 					if(find(m_controle->begin() + a + 1, m_controle->end(), m_controle[0][a]) == m_controle->end())
@@ -280,7 +283,7 @@ FMOD_RESULT F_CALLBACK EmGineAudioPlayer::cleanUpCallback(FMOD_CHANNELCONTROL * 
 
 					break;
 				}
-			stopIndex = m_controle->size() - 1;
+			stopIndex = 0;
 		}
 	}
 	else

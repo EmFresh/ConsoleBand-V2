@@ -14,8 +14,8 @@ struct AudioControle
 {
 	~AudioControle()
 	{
-		delete sound;
-		delete channel;
+		//delete sound;
+		//delete channel;
 	}
 	Audio* sound;
 	AudioChannel* channel;
