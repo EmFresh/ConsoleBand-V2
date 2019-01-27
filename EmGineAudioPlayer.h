@@ -16,8 +16,8 @@ struct AudioControle
 {
 	~AudioControle()
 	{
-		delete sound;
-		delete channel;
+		//delete sound;
+		//delete channel;
 	}
 	Audio* sound;
 	AudioChannel* channel;
@@ -117,7 +117,7 @@ public:
 private:
 
 	static void cleanup();
-	static void printError(FMOD_RESULT);
+	static void printError(FMOD_RESULT,const char* where="");
 	static FMOD_RESULT __stdcall cleanUpCallback(FMOD_CHANNELCONTROL *chanCtrl, FMOD_CHANNELCONTROL_TYPE ctrlType, FMOD_CHANNELCONTROL_CALLBACK_TYPE callbackType, void *commandData1, void *commandData2);
 
 	static uint stopIndex;

@@ -12,7 +12,6 @@ enum CONTROLLER_TYPE
 	XINPUT_UNKNOWN
 };
 
-
 //Buttons used for Normal controllers
 enum CONTROLLER_INPUT_BUTTONS
 {
@@ -35,7 +34,7 @@ enum CONTROLLER_INPUT_BUTTONS
 //Buttons used for Guitar controllers
 enum  GUITAR_INPUT_BUTTONS
 {
-	GUITAR_DPAD_UP =   XINPUT_GAMEPAD_DPAD_UP,
+	GUITAR_DPAD_UP = XINPUT_GAMEPAD_DPAD_UP,
 	GUITAR_DPAD_DOWN = XINPUT_GAMEPAD_DPAD_DOWN,
 	GUITAR_DPAD_LEFT = XINPUT_GAMEPAD_DPAD_LEFT,
 	GUITAR_DPAD_RIGHT = XINPUT_GAMEPAD_DPAD_RIGHT,
@@ -54,15 +53,15 @@ enum  GUITAR_INPUT_BUTTONS
 //Buttons used for Drum controllers
 enum DRUM_INPUT_BUTTONS
 {
-	DRUM_DPAD_UP   =XINPUT_GAMEPAD_DPAD_UP,
-	DRUM_DPAD_DOWN =XINPUT_GAMEPAD_DPAD_DOWN,
-	DRUM_DPAD_LEFT =XINPUT_GAMEPAD_DPAD_LEFT,
-	DRUM_DPAD_RIGHT= XINPUT_GAMEPAD_DPAD_RIGHT,
-	DRUM_PAD_RED= XINPUT_GAMEPAD_B,
-	DRUM_PAD_YELLOW= XINPUT_GAMEPAD_Y,
-	DRUM_PAD_BLUE= XINPUT_GAMEPAD_X,
-	DRUM_PAD_GREEN= XINPUT_GAMEPAD_A,
-	DRUM_KICK_PEDAL= XINPUT_GAMEPAD_LEFT_SHOULDER,
+	DRUM_DPAD_UP = XINPUT_GAMEPAD_DPAD_UP,
+	DRUM_DPAD_DOWN = XINPUT_GAMEPAD_DPAD_DOWN,
+	DRUM_DPAD_LEFT = XINPUT_GAMEPAD_DPAD_LEFT,
+	DRUM_DPAD_RIGHT = XINPUT_GAMEPAD_DPAD_RIGHT,
+	DRUM_PAD_RED = XINPUT_GAMEPAD_B,
+	DRUM_PAD_YELLOW = XINPUT_GAMEPAD_Y,
+	DRUM_PAD_BLUE = XINPUT_GAMEPAD_X,
+	DRUM_PAD_GREEN = XINPUT_GAMEPAD_A,
+	DRUM_KICK_PEDAL = XINPUT_GAMEPAD_LEFT_SHOULDER,
 	DRUM_BACK = XINPUT_GAMEPAD_BACK,
 	DRUM_START = XINPUT_GAMEPAD_START
 };
@@ -89,6 +88,34 @@ struct XinputDevice
 		XInputGetState(index, &info);
 	}
 
+	void setVibration(float L, float R) 
+	{
+		XINPUT_VIBRATION vibration;
+		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
+		vibration.wLeftMotorSpeed = 65535 * L; // use any value between 0-65535 here
+		vibration.wRightMotorSpeed = 65535 * R; // use any value between 0-65535 here
+		XInputSetState(index, &vibration);
+	}
+
+	void setVibrationL(float L) 
+	{
+		XINPUT_VIBRATION vibration;
+		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
+		setVibration(L, vibration.wRightMotorSpeed);
+	}
+
+	void setVibrationR(float R) 
+	{
+		XINPUT_VIBRATION vibration;
+		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
+		setVibration(vibration.wLeftMotorSpeed, R);
+	}
+
+	void resetVibration() 
+	{
+		setVibration(0, 0);
+	}
+
 	virtual int getButtonBitmask()
 	{
 		return info.Gamepad.wButtons > 0 ? info.Gamepad.wButtons : NULL;
@@ -106,11 +133,11 @@ struct XinputDevice
 
 	virtual bool isButtonStroked(int bitmask)
 	{
-		if (isButtonPressed(bitmask))
+		if(isButtonPressed(bitmask))
 			stroke[bitmask] = true;
-		else if (stroke[bitmask] && isButtonReleased(bitmask))
-			return (stroke[bitmask] = false, true);
-			   
+		else if(stroke[bitmask] && isButtonReleased(bitmask))
+			return ((stroke[bitmask] = false), true);
+
 		return false;
 	}
 
@@ -123,7 +150,7 @@ private:
 	std::unordered_map<int, bool> stroke;
 };
 
-struct XinputGuitar :public XinputDevice
+struct XinputGuitar:public XinputDevice
 {
 	XinputGuitar() {}
 	//XinputGuitar(XinputDevice div) :XinputDevice(div) {};
@@ -154,7 +181,7 @@ private:
 	float whammyBar;
 };
 
-struct XinputDrum :public XinputDevice
+struct XinputDrum:public XinputDevice
 {
 	XinputDrum() {};
 	//	XinputDrum(XinputDevice div) :XinputDevice(div) {};
@@ -163,7 +190,7 @@ struct XinputDrum :public XinputDevice
 private:
 };
 
-struct XinputController :public XinputDevice
+struct XinputController:public XinputDevice
 {
 	XinputController() {};
 	~XinputController() {};
@@ -188,7 +215,7 @@ struct XinputController :public XinputDevice
 	//
 	void getTriggers(Triggers& triggers)
 	{
-		triggers = { (float)info.Gamepad.bLeftTrigger / 255,  (float)info.Gamepad.bRightTrigger / 255 };
+		triggers = {(float)info.Gamepad.bLeftTrigger / 255,  (float)info.Gamepad.bRightTrigger / 255};
 	}
 
 private:

@@ -25,7 +25,7 @@ void EmGineAudioPlayer::init(int channels)
 	if(m_system->getNumDrivers(&driverCount))
 		return;
 
-	printError(m_system->init(channels, FMOD_INIT_NORMAL, nullptr));
+	printError(m_system->init(channels, FMOD_INIT_NORMAL, nullptr), "Line 28");
 }
 
 void EmGineAudioPlayer::disable()
@@ -47,8 +47,8 @@ void EmGineAudioPlayer::createAudio(const char * file)
 	m_controle->push_back(new AudioControle{newSound,nullptr});
 	//m_controle->push_back(nullptr);
 
-	printError(m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel));
-	m_controle->back()->channel->setCallback(cleanUpCallback);
+	printError(m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel), "Line 50");
+	//m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
 void EmGineAudioPlayer::createAudioStream(const char * file)
@@ -59,10 +59,10 @@ void EmGineAudioPlayer::createAudioStream(const char * file)
 		OutputDebugStringA("failed to create Audio Stream\n");
 		return;
 	}
-	m_controle->push_back(new AudioControle{newSound,nullptr});
 
-	printError(m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel));
-	m_controle->back()->channel->setCallback(cleanUpCallback);
+	m_controle->push_back(new AudioControle{newSound,nullptr});
+	printError(m_system->playSound(m_controle[0][m_controle->size() - 1]->sound, m_mainChannelGroup, false, &m_controle->back()->channel), "Line 64");
+	//m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
 void EmGineAudioPlayer::play(bool loop, bool newInst, uint index, uint from, uint to, FMOD_TIMEUNIT unit)
@@ -75,18 +75,19 @@ void EmGineAudioPlayer::play(bool loop, bool newInst, uint index, uint from, uin
 
 
 	if(!m_controle[0][index] || (m_controle[0][index] ? isStoped(index) : false))
-		printError(m_system->playSound(m_controle[0][index]->sound, nullptr, true, &m_controle[0][index]->channel));
+		printError(m_system->playSound(m_controle[0][index]->sound, nullptr, true, &m_controle[0][index]->channel), "Line 78");
 
 	if(loop)
-		printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL)),
-		printError(m_controle[0][index]->channel->setLoopCount(-1)),
-		from < to ? printError(m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit)) : 
+		printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL), "Line 81"),
+		printError(m_controle[0][index]->channel->setLoopCount(-1), "Line 82"),
+		from < to ? printError(m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit), "Line 83") :
 		void();
 	else
-		printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF));
+		printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF), "Line 86");
 
-	printError(m_controle[0][index]->channel->setPaused(false));
-	//cleanup();
+
+	printError(m_controle[0][index]->channel->setPaused(false), "Line 89");
+	cleanup();
 }
 
 template<class T> T lerp(float t, T p1, T p2)
@@ -97,34 +98,36 @@ template<class T> T lerp(float t, T p1, T p2)
 void EmGineAudioPlayer::playAll(bool loop, uint from, uint to, FMOD_TIMEUNIT unit)
 {
 	AudioChannelGroup* cg;
-	printError(m_system->getMasterChannelGroup(&cg));
+	printError(m_system->getMasterChannelGroup(&cg), "Line 101");
 	uint length;
-	printError(cg->setPaused(true));
+	printError(cg->setPaused(true), "Line 103");
 	for(uint index = 0; index < m_controle->size(); index++)
 		if(loop)
 		{
 
-			printError(m_controle[0][index]->channel->setPosition(from, unit));//fixes the issue for streamed audio
+			printError(m_controle[0][index]->channel->setPosition(from, unit), "Line 108");//fixes the issue for streamed audio
 
 
-			printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL));
-			printError(m_controle[0][index]->sound->getLength(&length, unit));
+			printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_NORMAL), "Line 111");
+			printError(m_controle[0][index]->sound->getLength(&length, unit), "Line 112");
 
 			from < to && from >= 0 ? to < length ?
-				printError(m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit))/*true*/ :
-				printError(m_controle[0][index]->channel->setLoopPoints(from, unit, length - 1, unit))/*false*/ :
+				printError(m_controle[0][index]->channel->setLoopPoints(from, unit, to, unit), "Line 115")/*true*/ :
+				printError(m_controle[0][index]->channel->setLoopPoints(from, unit, length - 1, unit), "Line 116")/*false*/ :
 				void()/*else*/;
 
-			printError(m_controle[0][index]->channel->setLoopCount(-1));
+			printError(m_controle[0][index]->channel->setLoopCount(-1), "Line 119");
 
 		}
 		else
-			printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF));
+			printError(m_controle[0][index]->channel->setMode(FMOD_LOOP_OFF), "Line 123");
 	OutputDebugStringA("\n\n");
 
+	cleanup();
+
 	for(auto &a : *m_controle)
-		printError(a->channel->setPaused(false));
-	printError(cg->setPaused(false));
+		printError(a->channel->setPaused(false), "Line 129");
+	printError(cg->setPaused(false), "Line 130");
 }
 
 void EmGineAudioPlayer::pause(uint index)
@@ -143,8 +146,9 @@ void EmGineAudioPlayer::pauseAll()
 
 void EmGineAudioPlayer::stop(uint index)
 {
-	stopIndex = index;
+	//stopIndex = index;
 	printError(m_controle[0][index]->channel->stop());
+	cleanup();
 }
 
 void EmGineAudioPlayer::stopAll()
@@ -157,11 +161,11 @@ void EmGineAudioPlayer::stopAll()
 
 
 	stopIndex = 0;
-	while(0 < m_controle->size())
-	{
-		printError(m_controle[0][0]->channel->stop());
-		m_controle->erase(m_controle->begin());
-	}
+	for(uint a = 0; a < m_controle->size(); a++)
+		printError(m_controle[0][a]->channel->stop());
+
+
+	cleanup();
 
 	cg->setPaused(paused);
 }
@@ -261,13 +265,15 @@ void EmGineAudioPlayer::cleanup()
 	}
 }
 
-void EmGineAudioPlayer::printError(FMOD_RESULT error)
+void EmGineAudioPlayer::printError(FMOD_RESULT error, const char* where)
 {
 
 	if(error)
 	{
+#if _DEBUG
 		std::string str(FMOD_ErrorString(error));
-		OutputDebugStringA((str+'\n').c_str());
+		OutputDebugStringA(("Error:\n" + str + '\n' + where + "\n\n").c_str());
+#endif
 	}
 }
 

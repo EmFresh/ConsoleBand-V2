@@ -300,7 +300,7 @@ struct SpriteSheet
 
 	void remove(const char* tag)
 	{
-		for (int a = 0; a < size(); a++)
+		for (unsigned a = 0; a < size(); a++)
 			if (m_sheet[0][a]->getTag() == tag)
 			{
 
@@ -322,9 +322,9 @@ struct SpriteSheet
 		m_sheet->clear();
 	}
 
-	int size()
+	unsigned size()
 	{
-		return m_sheet->size();
+		return (unsigned)m_sheet->size();
 	}
 
 	Sprite& at(unsigned int index)
@@ -334,7 +334,7 @@ struct SpriteSheet
 
 	Sprite& at(const char* tag)
 	{
-		for (int a = 0; a < size(); a++)
+		for (unsigned a = 0; a < size(); a++)
 			if (m_sheet[0][a]->getTag() == tag)
 				return *m_sheet[0][a];
 		return *m_sheet[0][size()];
