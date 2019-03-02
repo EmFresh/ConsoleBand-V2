@@ -2128,6 +2128,7 @@ bool startScreen()
 
 int main()
 {
+	srand(clock());
 	AudioPlayer::init();
 	logo->create("Game Files/Logo.txt");
 	track->create("Game Files/Track.txt");
