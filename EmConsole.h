@@ -100,8 +100,8 @@ struct Sprite
 		while(str = fgetws(str, 255, f),
 			m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
 			//m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
-			m_width = max(m_width, (ushort)(m_sprite[m_height]).size());
-		m_height++;
+			m_width = max(m_width, (ushort)(m_sprite[m_height]).size()),
+		m_height ++;
 
 		m_sprite.pop_back();
 		fclose(f);
