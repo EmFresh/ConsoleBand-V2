@@ -144,7 +144,7 @@ struct XinputDevice
 	XINPUT_STATE info;
 	CONTROLLER_TYPE type;
 	int index;
-	float deadZoneStick = .03f, deadZoneTrigger;
+	float deadZoneStick = 0.03f, deadZoneTrigger = 0.0f;
 
 private:
 	std::unordered_map<int, bool> stroke;
@@ -153,7 +153,7 @@ private:
 struct XinputGuitar:public XinputDevice
 {
 	XinputGuitar() {}
-	//XinputGuitar(XinputDevice div) :XinputDevice(div) {};
+	
 	~XinputGuitar() {}
 
 	int getFrets()
@@ -177,15 +177,20 @@ struct XinputGuitar:public XinputDevice
 	}
 
 private:
-	DWORD frets, strumUp, strumDown;
+	bool leftyMode;
+	DWORD frets, strum;
 	float whammyBar;
 };
 
 struct XinputDrum:public XinputDevice
 {
 	XinputDrum() {};
-	//	XinputDrum(XinputDevice div) :XinputDevice(div) {};
 	~XinputDrum() {};
+
+	bool DrumPadHit(int bitmask)
+	{
+		return XinputDevice::isButtonStroked(bitmask);
+	}
 
 private:
 };
@@ -195,7 +200,8 @@ struct XinputController:public XinputDevice
 	XinputController() {};
 	~XinputController() {};
 
-	Stick* getSticks(Stick sticks[2])
+	//Takes an array of two sticks ond outputs their values
+	Stick* getSticks()
 	{
 		sticks[0].
 			x = abs(info.Gamepad.sThumbLX < 0 ? (float)info.Gamepad.sThumbLX / 32768 : (float)info.Gamepad.sThumbLX / 32767) > deadZoneStick ?
@@ -204,12 +210,15 @@ struct XinputController:public XinputDevice
 			y = abs(info.Gamepad.sThumbLY < 0 ? (float)info.Gamepad.sThumbLY / 32768 : (float)info.Gamepad.sThumbLY / 32767) > deadZoneStick ?
 			info.Gamepad.sThumbLY < 0 ? (float)info.Gamepad.sThumbLY / 32768 : (float)info.Gamepad.sThumbLY / 32767 : 0;
 
+
 		sticks[1].
 			x = abs(info.Gamepad.sThumbRX < 0 ? (float)info.Gamepad.sThumbRX / 32768 : (float)info.Gamepad.sThumbRX / 32767) > deadZoneStick ?
 			info.Gamepad.sThumbRX < 0 ? (float)info.Gamepad.sThumbRX / 32768 : (float)info.Gamepad.sThumbRX / 32767 : 0;
 		sticks[1].
 			y = abs(info.Gamepad.sThumbRY < 0 ? (float)info.Gamepad.sThumbRY / 32768 : (float)info.Gamepad.sThumbRY / 32767) > deadZoneStick ?
 			info.Gamepad.sThumbRY < 0 ? (float)info.Gamepad.sThumbRY / 32768 : (float)info.Gamepad.sThumbRY / 32767 : 0;
+	
+		return sticks;
 	}
 
 	//
@@ -219,6 +228,7 @@ struct XinputController:public XinputDevice
 	}
 
 private:
+	Stick sticks[2];
 	DWORD buttons;
 	float LT, RT;
 };
@@ -237,6 +247,7 @@ public:
 
 	//gets the controller from index 0 -> 3 (inclusive)
 	static XinputDevice* getController(int index);
+
 private:
 	static	XinputDevice controllers[4];
 };

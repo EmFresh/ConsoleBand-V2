@@ -17,7 +17,7 @@ using std::pair;
 using std::function;
 using std::thread;
 using std::stoi;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 #pragma endregion
 
 #pragma region Deffines
@@ -62,8 +62,25 @@ function<bool()>godown = [&]()->bool
 
 #pragma endregion
 
-#pragma region Global Variables
+#pragma region Structs
 
+struct Fret
+{
+	Fret() {};
+	Fret(long a, int b, bool c) { pos = a, duration = b, hammerOn = c; };
+	long pos;
+	int duration;
+	bool hammerOn;
+};
+#pragma endregion
+
+#pragma region Global Variables
+//Console
+EmConsole* con = new EmConsole("RockBand in Console");
+
+//Sprites
+SpriteSheet* track = new SpriteSheet, * notes = new SpriteSheet, * logo = new SpriteSheet;
+Sprite* box = new Sprite, * pauseMenu = new Sprite;
 struct InstrumentInfo
 {
 	string instrument;
@@ -73,21 +90,18 @@ struct InstrumentInfo
 
 EmConsole *con = new EmConsole("RockBand in Console");
 
-SpriteSheet *track = new SpriteSheet, *notes = new SpriteSheet, *logo = new SpriteSheet;
-Sprite *box = new Sprite, *pauseMenu = new Sprite;
+//hit notes
+vector<vector<uint>>* disiNotes = new vector<vector<uint>>(5, vector<uint>());
 
-vector<vector<vector<uint>>>*disiNotes = new vector<vector<vector<uint>>>;
+//Colours
 vector<ushort>
-*fretColour = new vector<ushort>
+* fretColour = new vector<ushort>
 {FG_GREEN,FG_RED,FG_YELLOW,FG_BLUE,FG_PURPLE},
-
-*padColour = new vector<ushort>
+* padColour = new vector<ushort>
 {FG_PURPLE,FG_RED,FG_YELLOW,FG_BLUE,FG_GREEN},
-
-*fretNoteColour = new vector<ushort>
+* fretNoteColour = new vector<ushort>
 {FG_GREEN | FG_INTENSIFY,FG_RED | FG_INTENSIFY,
 FG_YELLOW | FG_INTENSIFY,FG_BLUE | FG_INTENSIFY,FG_PURPLE | FG_INTENSIFY},
-
 *padNoteColour = new vector<ushort>
 {FG_PURPLE | FG_INTENSIFY,FG_RED | FG_INTENSIFY,FG_YELLOW | FG_INTENSIFY,
 FG_BLUE | FG_INTENSIFY,FG_GREEN | FG_INTENSIFY};
@@ -99,8 +113,12 @@ vector<vector < vector < pair<long, long>>>>
 vector<InstrumentInfo> *trackInfo = new vector<InstrumentInfo>;
 vector<vector<pair<long, long>>>*vocalTrack = new vector<vector<pair<long, long>>>(5), *vocalTrackTmp = new vector<vector<pair<long, long>>>(5);
 
+//Lyric Information
+vector<vector<pair<long, long>>>* vocalTrack = new vector<vector<pair<long, long>>>(5), * vocalTrackTmp = new vector<vector<pair<long, long>>>(5);
 vector<vector<wstring>>* lyrics = new vector<vector<wstring>>;
-vector<vector<pair<uint, uint>>>* lyricTiming = new vector<vector<pair<uint, uint>>>, *lyricTimingTmp = new vector<vector<pair<uint, uint>>>;
+vector<vector<pair<uint, uint>>>* lyricTiming = new vector<vector<pair<uint, uint>>>, * lyricTimingTmp = new vector<vector<pair<uint, uint>>>;
+
+//Missilanious
 int  barCount, centerTrack, countAmountGuitar[5], countAmountBass[5], countAmountDrum[5], notesHit, noteOffset = 0, fretOffset,
 fretboardPosition, noteSpeed = 40, lastSpeed, spacingScale = lastSpeed = noteSpeed, create;
 uint colliCountGuitar[5], colliCountBass[5], colliCountDrum[5], firstLyric;
@@ -112,10 +130,10 @@ bool  start, paused(false), selected(false), exitSelect(false);
 bool healthCheck;
 
 int songChoice;
-string* songName = new string, songDir/*, instrument*/;
-wstring *percentstr = new wstring;
-ushort difficulty[4], notePadding = 2;
-thread  *t1 = new thread;
+string* songName = new string, songDir, instrument;
+wstring* percentstr = new wstring;
+ushort difficulty, notePadding = 2;
+thread* t1 = new thread;
 #pragma endregion
 
 #pragma region Deffinitions
@@ -130,7 +148,8 @@ void drawLines();
 void barLines();
 bool invisable(int, int, uint);
 void playSongMovement();
-float notesInSong(vector<vector<vector<pair<long, long>>>>*);
+template<class T>
+float notesInSong(vector<vector<T>>*);
 void percent();
 void playTrack();
 bool startScreen();
@@ -147,7 +166,7 @@ void fpsLimiter(float limit);
 
 wstring cDir(wstring s)
 {
-	for(auto &a : s)
+	for(auto& a : s)
 		if(a == '\\')
 			a = '/';
 	return s;
@@ -158,6 +177,10 @@ void openSong(string songFile)
 
 	smf::MidiFile file;
 	file.read((songDir = songFile) + "notes.mid");
+
+	if(!file.status()) { OutputDebugStringA("Song failed to load"); return; }
+
+	file.linkNotePairs();
 	file.doTimeAnalysis();
 	string trackStr;
 	theTracks->clear();
@@ -166,6 +189,12 @@ void openSong(string songFile)
 	for(int a = 0; a < trackInfo->size(); a++)
 	{
 
+	for(auto& a : *guitarTrack)
+		a.clear();
+	for(auto& a : *bassTrack)
+		a.clear();
+	for(auto& a : *drumTrack)
+		a.clear();
 		pressed.push_back(vector<bool>(5));
 		initPressed.push_back(vector<bool>(5));
 		theTracks->push_back(vector<vector<pair<long, long>>>(5));
@@ -182,24 +211,38 @@ void openSong(string songFile)
 
 	vocalTrack->assign(120, vector<pair<long, long>>());
 
-	for(int a = 0; a < file.getNumTracks(); a++)
+	for(int a = 0; a < file.size(); a++)
 		for(int b = 0; b < file[a].size(); b++)
 		{
+
+			int tempo=0;
+
 			if(file[a][b].isTrackName())
 			{
 				trackStr = string(file[a][b].begin() + 3, file[a][b].end());
-				if(trackStr == "PART VOCALS")
-					continue;
-				if(trackStr == "PART GUITAR")
-					continue;
-				if(trackStr == "PART BASS")
-					continue;
-				if(trackStr == "PART DRUMS")
-					continue;
-
-				break;
+				//if(trackStr == "PART VOCALS")
+				//	continue;
+				//if(trackStr == "PART GUITAR")
+				//	continue;
+				//if(trackStr == "PART BASS")
+				//	continue;
+				//if(trackStr == "PART DRUMS")
+				//	continue;
+				//
+				//break;
 			}
 
+			if(file[a][b].isTimeSignature())
+			{
+				tempo = file[a][b].getTempoSeconds();
+				tempo;
+			}
+
+			if(file[a][b].isMetaMessage())
+			{
+				tempo = file[a][b].getMetaType();
+				tempo;
+			}
 			if(trackStr == "PART VOCALS")
 			{
 
@@ -566,8 +609,8 @@ void openSong(string songFile)
 void percent()
 {
 	char p2[8];
-	//if(instrument == "guitar")
-	sprintf_s(p2, "%.2f", abs((notesInSong(theTracks) - notesHit) / notesInSong(theTracks) * 100 - 100));
+	 if(instrument == "guitar")
+		sprintf_s(p2, "%.2f", abs((notesInSong(guitarTrack) - notesHit) / notesInSong(guitarTrack) * 100 - 100));
 
 	//if(instrument == "rhythm")
 	//	sprintf_s(p2, "%.2f", abs((notesInSong(bassTrack) - notesHit) / notesInSong(bassTrack) * 100 - 100));
@@ -579,13 +622,12 @@ void percent()
 	tmp += '%';
 	*percentstr = wstring(tmp.begin(), tmp.end());
 }
-
-float notesInSong(vector<vector<vector<pair<long, long>>>>*song)
+template<class T>
+float notesInSong(std::vector<vector<T>>* song)
 {
 	float count(0);
-	for(auto&a : *song)
-		for(auto &b : a)
-			count += (float)b.size();
+	for(auto& a : *song)
+		count += (float)a.size();
 	return count;
 }
 
@@ -743,7 +785,7 @@ bool noteDelete(int index)
 				return false;
 
 
-			for(auto&a : num)
+			for(auto& a : num)
 				notesHit++,
 				(*disiNotes)[index][a].push_back(colliCountGuitar[a]++);
 		}
@@ -809,7 +851,7 @@ bool noteDelete(int index)
 				return false;
 
 
-			for(auto&a : num)
+			for(auto& a : num)
 				notesHit++,
 				(*disiNotes)[index][a].push_back(colliCountBass[a]++);
 		}
@@ -843,6 +885,8 @@ bool invisable(int index, int fret, uint check)
 	return false;
 }
 #pragma endregion
+
+#pragma region Game Play
 
 #pragma region Bar Lines
 
@@ -929,8 +973,6 @@ void barLines()
 
 }
 #pragma endregion
-
-#pragma region Game Play
 
 void playPauseMenu()
 {
@@ -1211,7 +1253,7 @@ void playSongMovement()
 		if(incriment > (long)lyricTiming[0][a].front().first)
 		{
 			wstring phrase;
-			for(auto &b : lyrics[0][a])
+			for(auto& b : lyrics[0][a])
 				phrase += b;
 
 			1 > lyrics[0][a].size() - 1 ?
@@ -1270,7 +1312,6 @@ void playButtonPress()
 			if(((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f))) > 0 && ((float)(*notes)[0].getHeight() /
 				((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) -
 				((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) - spacingScale * 2) * 2))) > 0)
-
 				noteSpeed = spacingScale * 2,
 				noteSpeed *= int(speedPercent += (newSpeed ? .25f : -.25f));
 
@@ -1531,7 +1572,7 @@ bool createdSongList()
 		songs.clear();
 		songPath.clear();
 		count = 0;
-		for(auto &a : fs::directory_iterator(path))
+		for(auto& a : fs::directory_iterator(path))
 		{
 			if(count < movement || count - movement >(endHeight - startHeight))
 			{
@@ -1550,7 +1591,7 @@ bool createdSongList()
 				if(float(std::clock() - lastClockT) / CLOCKS_PER_SEC > 1.5f)
 				{
 					bool isSong = false;
-					for(auto &b : fs::directory_iterator(a.path()))
+					for(auto& b : fs::directory_iterator(a.path()))
 					{
 						wstring tmp = b.path();
 						if(tmp.substr(tmp.find_last_of('.') + 1) == L"ini")
@@ -1562,7 +1603,7 @@ bool createdSongList()
 
 							AudioPlayer::stopAll();
 							uint started = 5000;
-							for(auto &b : fs::directory_iterator(playing))
+							for(auto& b : fs::directory_iterator(playing))
 							{
 								wstring ogg = cDir(b.path());
 								if(ogg.substr(ogg.find_last_of('.') + 1) == L"ogg")
@@ -1574,7 +1615,7 @@ bool createdSongList()
 									FILE* f;
 									fopen_s(&f, string(ogg.begin(), ogg.end()).c_str(), "r");
 
-									char *str2 = new char[255];
+									char* str2 = new char[255];
 
 									while(str2 = fgets(str2, 255, f))
 									{
@@ -1619,7 +1660,7 @@ bool createdSongList()
 			songPath.push_back(p + L'/');
 
 			bool isSong = false;
-			for(auto &b : fs::directory_iterator(a.path()))
+			for(auto& b : fs::directory_iterator(a.path()))
 			{
 				wstring tmp = b.path();
 				if(tmp.substr(tmp.find_last_of('.') + 1) == L"ini")
@@ -1628,13 +1669,13 @@ bool createdSongList()
 
 			if(isSong)
 			{
-				for(auto &b : fs::directory_iterator(songPath.back()))
+				for(auto& b : fs::directory_iterator(songPath.back()))
 					if(b.path().extension() == L".ini")
 					{
 						FILE* f;
 						wstring s1(b.path());
 						fopen_s(&f, string(s1.begin(), s1.end()).c_str(), "r");
-						char *str2 = new char[255];
+						char* str2 = new char[255];
 
 						p = L"";
 						while(str2 = fgets(str2, 255, f))
@@ -1679,7 +1720,7 @@ bool createdSongList()
 			if(![&]()->bool
 				{
 					count = 0;
-						for(auto &a : fs::directory_iterator(path))
+						for(auto& a : fs::directory_iterator(path))
 						{
 							if(songChoice == count++)
 							{
@@ -1696,7 +1737,7 @@ bool createdSongList()
 				}())
 			{
 				count = 0;
-				for(auto &a : fs::directory_iterator(path))
+				for(auto& a : fs::directory_iterator(path))
 					if(songChoice == count++)
 					{
 						path = cDir(a.path());
@@ -1788,7 +1829,7 @@ bool createdSongList()
 			con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a]);
 
 		if(songChoice - movement >= 0 && (uint)songChoice - movement < songs.size())
-			*songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
+			* songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
 		con->drawConsole();
 
 	}
@@ -1976,7 +2017,7 @@ void reset()
 			b.clear();
 	firstLyric = 0;
 
-	for(auto &a : fs::directory_iterator(songDir))
+	for(auto& a : fs::directory_iterator(songDir))
 	{
 		wstring ogg = cDir(a.path());
 		if(ogg.substr(ogg.find_last_of('.') + 1) == L"ogg")
@@ -2015,7 +2056,7 @@ void calculateFPS()
 	{
 		count = 0;
 		fps = 0;
-		for(auto &a : frameTimes)
+		for(auto& a : frameTimes)
 			fps += a;
 		fps /= SAMPLE;
 	}
@@ -2136,9 +2177,7 @@ int main()
 	pauseMenu->create("Game Files/Pause Menu.txt");
 	spacingScale /= 2;
 
-	//XinputManager::getController(0)->setVibrationR(1);
-
-	con->setConsoleSize((*track)[0].getWidth() * 2, int((*track)[0].getHeight()*.70));
+	con->setConsoleSize((*track)[0].getWidth() * 2, int((*track)[0].getHeight() * .70));
 	con->placeConsoleCenter();
 	con->setResizable(true);
 
