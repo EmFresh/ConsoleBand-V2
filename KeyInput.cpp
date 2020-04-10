@@ -31,6 +31,8 @@ int KeyInput::getTypedSize()
 
 const char* KeyInput::type()
 {
+	if(GetConsoleWindow() != GetForegroundWindow())return typing.c_str();
+
 	//OutputDebugStringA((std::to_string(count) + "\n").c_str());
 	if(!press(pressed) && pressed != 0)
 		count2 = wait2;
@@ -50,7 +52,8 @@ const char* KeyInput::type()
 					{
 						wait2 = amount;
 						return (typing += (char)a).c_str();
-					} else
+					}
+					else
 					{
 						wait2 = amount;
 						return (typing += numShiftKeys[a - 0x30]).c_str();
@@ -83,7 +86,8 @@ const char* KeyInput::type()
 					{
 						wait2 = amount;
 						return (typing += (char)a).c_str();
-					} else
+					}
+					else
 					{
 						wait2 = amount;
 						return (typing += a + 32).c_str();
@@ -96,7 +100,8 @@ const char* KeyInput::type()
 				{
 					wait2 = amount;
 					return (typing += symbalShiftKeys[0]).c_str();
-				} else
+				}
+				else
 				{
 					wait2 = amount;
 					return (typing += symbalKeys[0]).c_str();
@@ -109,7 +114,8 @@ const char* KeyInput::type()
 					{
 						wait2 = amount;
 						return (typing += symbalShiftKeys[a - 0xBF + 1]).c_str();
-					} else
+					}
+					else
 					{
 						wait2 = amount;
 						return (typing += symbalKeys[a - 0xBF + 1]).c_str();
@@ -122,7 +128,8 @@ const char* KeyInput::type()
 					{
 						wait2 = amount;
 						return (typing += symbalShiftKeys[a - 0xDB + 3]).c_str();
-					} else
+					}
+					else
 					{
 						wait2 = amount;
 						return (typing += symbalKeys[a - 0xDB + 3]).c_str();
@@ -135,7 +142,8 @@ const char* KeyInput::type()
 					{
 						wait2 = amount;
 						return (typing += symbalShiftKeys[a - 0XBB + 7]).c_str();
-					} else
+					}
+					else
 					{
 						wait2 = amount;
 						return (typing += symbalKeys[a - 0XBB + 7]).c_str();
@@ -144,10 +152,11 @@ const char* KeyInput::type()
 			wait2 = 0;
 			pressed = 0;
 		}
-	} else
+	}
+	else
 	{
 		for(int x = 0; x < 256; x++)
-			(char) (GetAsyncKeyState(x) >> 8);
+			(char)(GetAsyncKeyState(x) >> 8);
 	}
 
 	if(count++ == wait)
@@ -157,7 +166,8 @@ const char* KeyInput::type()
 		{
 			wait = (wait == 0 ? 200 : 25);
 			return (typing = typing.substr(0, typing.size() - 1)).c_str();
-		} else if(stroke(VK_SPACE))
+		}
+		else if(stroke(VK_SPACE))
 			return (typing += ' ').c_str();
 		wait = 0;
 	}
@@ -175,14 +185,14 @@ to be checked if key is pressed and then released
 */
 bool KeyInput::stroke(int key)
 {
-	
-	if(GetAsyncKeyState(key))
-		enter[key] = true;
-	else if(enter[key] && !GetAsyncKeyState(key))
-	{
-		enter[key] = false;
-		return true;
-	}
+	if(GetConsoleWindow() == GetForegroundWindow())
+		if(GetAsyncKeyState(key))
+			enter[key] = true;
+		else if(enter[key] && !GetAsyncKeyState(key))
+		{
+			enter[key] = false;
+			return true;
+		}
 	return false;
 }
 
@@ -195,7 +205,9 @@ checked if key is pressed
 */
 bool KeyInput::press(int key)
 {
-	return GetAsyncKeyState(key);
+	if((GetConsoleWindow() == GetForegroundWindow()))
+		return GetAsyncKeyState(key);
+	return false;
 }
 
 /*
