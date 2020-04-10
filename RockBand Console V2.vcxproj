@@ -180,6 +180,9 @@
     <Text Include="Game Files\Pause Menu.txt" />
     <Text Include="Game Files\Track.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

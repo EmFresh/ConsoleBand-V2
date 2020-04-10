@@ -354,7 +354,7 @@ struct SpriteSheet
 		m_sheet->clear();
 	}
 
-	int size()
+	unsigned size()
 	{
 		return m_sheet->size();
 	}
@@ -504,10 +504,10 @@ struct MouseInput
 
 	static bool stroke(MouseButtons button)
 	{
-		if(GetAsyncKeyState(button))
-			buttons[button] = true;
-		if(!GetAsyncKeyState(button) && buttons[button])
-			return (buttons[button] = false, true);
+		if (GetAsyncKeyState(button))
+			buttons[(short)button] = true;
+		if (!GetAsyncKeyState(button) && buttons[(short)button])
+			return (buttons[(short)button] = false, true);
 
 		return false;
 	}
@@ -542,10 +542,10 @@ struct MouseInput
 					position = {mer.dwMousePosition.X, mer.dwMousePosition.Y};
 					break;
 				case MOUSE_WHEELED://vertical
-					vertWheel += (int)mer.dwButtonState / std::abs((int)mer.dwButtonState);
+					vertWheel += (short)mer.dwButtonState / std::abs((short)mer.dwButtonState);
 					break;
 				case MOUSE_HWHEELED://horizontal
-					horiWheel += (int)mer.dwButtonState / std::abs((int)mer.dwButtonState);
+					horiWheel += (short)mer.dwButtonState / std::abs((short)mer.dwButtonState);
 					break;
 				}
 

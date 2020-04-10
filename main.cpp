@@ -16,6 +16,7 @@ using std::string;
 using std::pair;
 using std::function;
 using std::thread;
+using std::pair;
 using std::stoi;
 namespace fs = std::filesystem;
 #pragma endregion
@@ -66,11 +67,21 @@ function<bool()>godown = [&]()->bool
 
 struct Fret
 {
-	Fret() {};
-	Fret(long a, int b, bool c) { pos = a, duration = b, hammerOn = c; };
-	long pos;
-	int duration;
+	Fret() {}
+	Fret(long pos, unsigned dir, unsigned on, unsigned off, bool ham)
+	{
+		position = pos, diration = dir, noteOn = on, noteOff = off, hammerOn = ham;
+	}
+
+	bool operator==(Fret other)
+	{
+		return noteOn == other.noteOn && noteOff == other.noteOff;
+	}
+
+	long position, diration;
+	unsigned noteOn, noteOff;
 	bool hammerOn;
+	std::pair<int, int> link{-1,-1};
 };
 #pragma endregion
 
@@ -102,7 +113,7 @@ vector<ushort>
 * fretNoteColour = new vector<ushort>
 {FG_GREEN | FG_INTENSIFY,FG_RED | FG_INTENSIFY,
 FG_YELLOW | FG_INTENSIFY,FG_BLUE | FG_INTENSIFY,FG_PURPLE | FG_INTENSIFY},
-*padNoteColour = new vector<ushort>
+* padNoteColour = new vector<ushort>
 {FG_PURPLE | FG_INTENSIFY,FG_RED | FG_INTENSIFY,FG_YELLOW | FG_INTENSIFY,
 FG_BLUE | FG_INTENSIFY,FG_GREEN | FG_INTENSIFY};
 
@@ -209,13 +220,17 @@ void openSong(string songFile)
 
 	Sprite lyricBox("Game Files/Lyrics Box.txt");
 
+	//file.sortTracks();
+
 	vocalTrack->assign(120, vector<pair<long, long>>());
+	int quorter = file.getTPQ();
+	quorter /= 4;
 
 	for(int a = 0; a < file.size(); a++)
 		for(int b = 0; b < file[a].size(); b++)
 		{
 
-			int tempo=0;
+			//int tempo = 0;
 
 			if(file[a][b].isTrackName())
 			{
@@ -234,14 +249,14 @@ void openSong(string songFile)
 
 			if(file[a][b].isTimeSignature())
 			{
-				tempo = file[a][b].getTempoSeconds();
-				tempo;
+				//tempo = file[a][b].getTempoSeconds();
+				//tempo;
 			}
 
 			if(file[a][b].isMetaMessage())
 			{
-				tempo = file[a][b].getMetaType();
-				tempo;
+				//tempo = file[a][b].getTempo();
+				//tempo;
 			}
 			if(trackStr == "PART VOCALS")
 			{
@@ -264,7 +279,7 @@ void openSong(string songFile)
 							(timeInSec - lyricTiming[0].back().back().second < (uint)750))
 
 							lyrics[0].back().push_back(L" " + wstring(file[a][b].begin() + 3, file[a][b].end())),
-								lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
+							lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
 						else
 						{
 							lyrics->push_back(vector<wstring>());
@@ -360,45 +375,45 @@ void openSong(string songFile)
 							(timeInSec - lyricTiming[0].back().back().second < (uint)750))
 
 							lyrics[0].back().push_back(L" " + wstring(file[a][b].begin() + 3, file[a][b].end())),
-								lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
+							lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
 						else
 						{
 							lyrics->push_back(vector<wstring>());
 							lyricTiming->push_back(vector<pair<uint, uint>>());
 
-							if(lyrics[0][lyrics->size() - 2].size())
-								if(lyrics[0][lyrics->size() - 2].back().size())
-									if(lyrics[0][lyrics->size() - 2].back().back() == '-')
+							if(!lyrics[0][lyrics->size() - 2].empty() &&
+							   !lyrics[0][lyrics->size() - 2].back().empty())
+								if(lyrics[0][lyrics->size() - 2].back().back() == '-')
+								{
+									function<void()> sylableGroup = [&]()
 									{
-										function<void()> sylableGroup = [&]()
+										lyricTiming[0].back().insert(lyricTiming[0].back().begin(), lyricTiming[0][lyricTiming[0].size() - 2].back()),
+											lyrics[0].back().insert(lyrics[0].back().begin(), lyrics[0][lyrics[0].size() - 2].back());
+
+										lyricTiming[0][lyricTiming[0].size() - 2].pop_back(),
+											lyrics[0][lyrics[0].size() - 2].pop_back();
+
+										if(lyricTiming[0].size() - 2 > -1)
 										{
-											lyricTiming[0].back().insert(lyricTiming[0].back().begin(), lyricTiming[0][lyricTiming[0].size() - 2].back()),
-												lyrics[0].back().insert(lyrics[0].back().begin(), lyrics[0][lyrics[0].size() - 2].back());
+											lyricTiming[0][lyricTiming[0].size() - 2].back().second = (uint)(file.getTimeInSeconds(a, b) * 1000);
 
-											lyricTiming[0][lyricTiming[0].size() - 2].pop_back(),
-												lyrics[0][lyrics[0].size() - 2].pop_back();
+											if(lyrics[0][lyrics->size() - 2].back().back() == L'-')
+												sylableGroup();
+										}
+									};
 
-											if(lyricTiming[0].size() - 2 > -1)
-											{
-												lyricTiming[0][lyricTiming[0].size() - 2].back().second = (uint)(file.getTimeInSeconds(a, b) * 1000);
+									sylableGroup();
 
-												if(lyrics[0][lyrics->size() - 2].back().back() == L'-')
-													sylableGroup();
-											}
-										};
+									lyrics->back().push_back(wstring(file[a][b].begin() + 3, file[a][b].end()));
+									lyricTiming->back().push_back({file.getTimeInSeconds(a, b) * 1000,
+																  file.getTimeInSeconds(a, b) * 1000});
 
-										sylableGroup();
+									//removes the '+'s from the song 
+									if(lyrics->back().back().back() == L'+')
+										lyrics->back().pop_back();
 
-										lyrics->back().push_back(wstring(file[a][b].begin() + 3, file[a][b].end()));
-										lyricTiming->back().push_back({file.getTimeInSeconds(a, b) * 1000,
-																	  file.getTimeInSeconds(a, b) * 1000});
-
-										//removes the '+'s from the song 
-										if(lyrics->back().back().back() == L'+')
-											lyrics->back().pop_back();
-
-										continue;
-									}
+									continue;
+								}
 
 							lyricTiming[0][lyricTiming[0].size() - 2].back().second = (uint)(file.getTimeInSeconds(a, b) * 1000);
 
@@ -451,7 +466,7 @@ void openSong(string songFile)
 				if(file[a][b].isNoteOff())
 				{
 					int key = file[a][b].getKeyNumber();
-					(*vocalTrack)[key][vocalTrack->at(key).size() - 1].second = (uint)(file.getTimeInSeconds(a, b) * 1000);
+					(*vocalTrack)[key].back().second = (uint)(file.getTimeInSeconds(a, b) * 1000);
 					continue;
 				}
 				continue;
@@ -537,6 +552,109 @@ void openSong(string songFile)
 	file.clear();
 
 
+#ifdef max
+#undef max
+#endif // max
+
+
+
+
+
+
+	* guitarTrackTmp = *guitarTrack;
+	Fret last;
+	unsigned deleteCount[5]{0,0,0,0,0};
+
+	function<bool(vector<vector<Fret>>*, int, Fret&, Fret)> fretCheck = [&quorter, &deleteCount](vector<vector<Fret>>* orig, int fretNum, Fret& current, Fret last)->bool
+	{
+		bool theLast = !(abs((int)(current.noteOn - last.noteOff)));
+
+		if(theLast)
+			(*orig)[fretNum][deleteCount[fretNum]].hammerOn = true;
+
+		return theLast;
+	};
+
+
+	for(auto& a : *guitarTrackTmp)
+		if(!a.empty())
+			last = a[0];
+
+	for(auto& a : *guitarTrackTmp)
+		if(!a.empty())
+			last = last.noteOn > a[0].noteOn ? a[0] : last;
+
+	int index = 0;
+	for(auto& a : *guitarTrackTmp)
+		if(index++, (!a.empty() && a[0] == last))
+			a.erase(a.begin()), deleteCount[index - 1]++;
+
+	while([]()->bool{for(auto& a : *guitarTrackTmp)if(!a.empty())return true; return false; }())
+	{
+		index = 0;
+		for(auto& a : *guitarTrackTmp)
+			if(index++, !a.empty())
+				fretCheck(guitarTrack, index - 1, a[0], last);
+
+
+		for(auto a : (*guitarTrackTmp))
+			if(!a.empty())
+				last = a[0];
+
+		for(auto& a : (*guitarTrackTmp))
+			if(!a.empty())
+				last = last.noteOn > a[0].noteOn ? a[0] : last;
+
+		index = 0;
+		for(auto& a : *guitarTrackTmp)
+			if(index++, (!a.empty() && a[0] == last))
+				a.erase(a.begin()), deleteCount[index - 1]++;
+
+	}
+
+
+	unsigned maxi =
+		std::max({(*guitarTrack)[0].size(),(*guitarTrack)[1].size(),
+						(*guitarTrack)[2].size(),(*guitarTrack)[3].size(),
+						(*guitarTrack)[4].size()});
+
+	auto& track = (*guitarTrack);
+	for(int a = 1; a < maxi; ++a)
+	{
+		for(int b = 4; b >= 0; b--)
+			if(a < track[b].size())
+			{
+				if(!((track[b][a].noteOn - track[b][a - 1].noteOff)))
+					track[b][a].hammerOn = false;
+				if(track[b][a].link.first >= 0)
+				{
+					auto tmp = track[b][a];
+					bool isHammeron = tmp.hammerOn;
+					while(tmp.link.first >= 0)
+					{
+						if(tmp.hammerOn == false)
+						{
+							isHammeron = false;
+							break;
+						}
+						tmp = track[tmp.link.first][tmp.link.second];
+					}
+
+					track[b][a].hammerOn = isHammeron;
+					pair<int, int> tmp2 = track[b][a].link;
+					//pair<int, int> tmp3 = tmp.link;
+					while(tmp2.first >= 0)
+					{
+						track[tmp2.first][tmp2.second].hammerOn = isHammeron;
+						tmp2 = track[tmp2.first][tmp2.second].link;
+					}
+
+				}
+			}
+	}
+
+
+
 	for(uint a = 0; a < lyrics->size(); a++)
 	{
 		if(!lyrics[0][a].size())//get rid of empty vectors
@@ -600,6 +718,7 @@ void openSong(string songFile)
 	//}
 
 }
+
 #pragma endregion	
 
 #pragma region Play
@@ -609,7 +728,7 @@ void openSong(string songFile)
 void percent()
 {
 	char p2[8];
-	 if(instrument == "guitar")
+	if(instrument == "guitar")
 		sprintf_s(p2, "%.2f", abs((notesInSong(guitarTrack) - notesHit) / notesInSong(guitarTrack) * 100 - 100));
 
 	//if(instrument == "rhythm")
@@ -965,8 +1084,8 @@ void barLines()
 
 		firstNote = firstNote / noteSpeed + incriment / noteSpeed + fretboardPosition;
 
-		lines->clear(),
-			lines->push_back(firstNote);
+		lines->clear();
+		lines->push_back(firstNote);
 	}
 
 	drawLines();
@@ -1007,7 +1126,7 @@ void playPauseMenu()
 			}()) ||
 		guitarstart()) || (deselect() && selected))
 		selected = !selected,
-				std::swap(colours[1], colours[2]);
+		std::swap(colours[1], colours[2]);
 
 			if(!selected)
 			{
@@ -1020,10 +1139,10 @@ void playPauseMenu()
 				{
 					short tmp2 = (short)ceil(con->getHeight() / 4.5f);
 
-					if(Sprite({options[a]}).mouseCollision({short(con->getWidth() / 2 - options[a].size() / 2), short(tmp2 + a * 2)}, MouseInput::position))
-						selection = a;
-				}
-			}
+			if(Sprite({options[a]}).mouseCollision({short(con->getWidth() / 2 - options[a].size() / 2), short(tmp2 + a * 2)}, MouseInput::position))
+				selection = a;
+		}
+	}
 
 			if(selected)
 				switch(selection)
@@ -1052,46 +1171,45 @@ void playPauseMenu()
 							((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) -
 							((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) - spacingScale * 2) * 2))) > 0)
 
-							noteSpeed = spacingScale * 2,
-							noteSpeed = int(noteSpeed * (speedPercent += (newSpeed ? .25f : -.25f)));
+			wchar_t percent[10];
+			swprintf_s(percent, speedPercent != 1 ? L": %.2f%%" : L": normal", abs(2 - speedPercent));
+			options[2] += percent;
+			break;
+		case 3://change difficulty
+			con->clearConsole();
+			difficultyMenu();
+			openSong(songDir);
+			reset();
+			selected = !selected;
+			paused = false;
+			break;
+		case 4://song select
+			con->clearConsole();
+			exitSelect = !createdSongList();
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			reset();
+			AudioPlayer::playAll();
+			paused = false;
+			return;
+		case 5://start menu
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			paused = false;
+			exitSelect = true;
 
-					wchar_t percent[10];
-					swprintf_s(percent, speedPercent != 1 ? L": %.2f%%" : L": normal", abs(2 - speedPercent));
-					options[2] += percent;
-					break;
-				case 3://change difficulty
-					con->clearConsole();
-					difficultyMenu();
-					openSong(songDir);
-					reset();
-					selected = !selected;
-					paused = false;
-					break;
-				case 4://song select()
-					con->clearConsole();
-					exitSelect = !createdSongList();
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					reset();
-					AudioPlayer::playAll();
-					paused = false;
-					return;
-				case 5://start menu
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					paused = false;
-					exitSelect = true;
+			break;
+		}
 
-					break;
-				}
+	con->toConsoleBuffer(*pauseMenu, con->getWidth() / 2 - (*pauseMenu).getWidth() / 2, con->getHeight() / 3 - (*pauseMenu).getHeight() / 2);
 
-			con->toConsoleBuffer(*pauseMenu, con->getWidth() / 2 - (*pauseMenu).getWidth() / 2, con->getHeight() / 3 - (*pauseMenu).getHeight() / 2);
+	for(uint a = 0; a < optAmount; a++)
+		con->toConsoleBuffer(options[a], (con->getWidth() / 2 - ((options[a]).size() / 2)), int(ceil(con->getHeight() / 4.5f) + a * 2), colours[selection == a]);
 
 			for(uint a = 0; a < optAmount; a++)
 				con->toConsoleBuffer(options[a], int(con->getWidth() / 2 - ((options[a]).size() / 2)), int(ceil(con->getHeight() / 4.5f) + a * 2), colours[selection == a]);
-
 
 }
 
@@ -1311,7 +1429,7 @@ void playButtonPress()
 		if((newSpeed) || KeyInput::stroke(VK_NUMPAD6))
 			if(((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f))) > 0 && ((float)(*notes)[0].getHeight() /
 				((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) -
-				((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) - spacingScale * 2) * 2))) > 0)
+			   ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) - spacingScale * 2) * 2))) > 0)
 				noteSpeed = spacingScale * 2,
 				noteSpeed *= int(speedPercent += (newSpeed ? .25f : -.25f));
 
@@ -1737,6 +1855,20 @@ bool createdSongList()
 				}())
 			{
 				count = 0;
+					for(auto& a : fs::directory_iterator(path))
+					{
+						if(songChoice == count++)
+							for(auto& b : fs::directory_iterator(a.path()))
+							{
+								wstring tmp = b.path();
+									if(tmp.substr(tmp.find_last_of('.') + 1) == L"ini")
+										return true;
+							}
+					}
+				return false;
+			}())
+			{
+				count = 0;
 				for(auto& a : fs::directory_iterator(path))
 					if(songChoice == count++)
 					{
@@ -1795,12 +1927,12 @@ bool createdSongList()
 		if(songChoice >= (endHeight - startHeight) / 3 && songChoice < count - (endHeight - startHeight) / 3)
 			movement =
 			(
-				startHeight + songChoice - movement > startHeight + (endHeight - startHeight) / 3 ?
-				(startHeight + songChoice - movement > endHeight - (endHeight - startHeight) / 3 ?
-					songChoice - (endHeight - (endHeight - startHeight) / 3 - startHeight) : movement)
-				:
-				songChoice - (endHeight - startHeight) / 3
-				);
+			startHeight + songChoice - movement > startHeight + (endHeight - startHeight) / 3 ?
+			(startHeight + songChoice - movement > endHeight - (endHeight - startHeight) / 3 ?
+			songChoice - (endHeight - (endHeight - startHeight) / 3 - startHeight) : movement)
+			:
+			songChoice - (endHeight - startHeight) / 3
+			);
 
 		else if(songChoice < (endHeight - startHeight) / 3)
 			movement = 0;
@@ -1829,7 +1961,7 @@ bool createdSongList()
 			con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a]);
 
 		if(songChoice - movement >= 0 && (uint)songChoice - movement < songs.size())
-			* songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
+			*songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
 		con->drawConsole();
 
 	}
@@ -2180,6 +2312,7 @@ int main()
 	con->setConsoleSize((*track)[0].getWidth() * 2, int((*track)[0].getHeight() * .70));
 	con->placeConsoleCenter();
 	con->setResizable(true);
+
 
 	std::vector<std::wstring>* boxy = new  std::vector < std::wstring >;
 	*boxy =
