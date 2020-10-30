@@ -75,7 +75,7 @@ struct Fret
 
 	bool operator==(Fret other)
 	{
-		return noteOn == other.noteOn && noteOff == other.noteOff;
+		return noteOn == other.noteOn;
 	}
 
 	long position, diration;
@@ -229,7 +229,6 @@ void openSong(string songFile)
 	for(int a = 0; a < file.size(); a++)
 		for(int b = 0; b < file[a].size(); b++)
 		{
-
 			//int tempo = 0;
 
 			if(file[a][b].isTrackName())
@@ -557,36 +556,38 @@ void openSong(string songFile)
 #endif // max
 
 
-
-
-
-
 	* guitarTrackTmp = *guitarTrack;
 	Fret last;
 	unsigned deleteCount[5]{0,0,0,0,0};
 
 	function<bool(vector<vector<Fret>>*, int, Fret&, Fret)> fretCheck = [&quorter, &deleteCount](vector<vector<Fret>>* orig, int fretNum, Fret& current, Fret last)->bool
 	{
-		bool theLast = !(abs((int)(current.noteOn - last.noteOff)));
+		bool theLast = /*((int)(current.noteOn - last.noteOff)) <= (320) ||*/( (int)(current.noteOn - last.noteOn) <= (320));
 
-		if(theLast)
-			(*orig)[fretNum][deleteCount[fretNum]].hammerOn = true;
+		if(deleteCount[fretNum])
+		if(last == (*orig)[fretNum][deleteCount[fretNum]-1])theLast = false;
 
-		return theLast;
+		//if(theLast)
+		//	(*orig)[fretNum][deleteCount[fretNum]].hammerOn = true;
+
+		return (*orig)[fretNum][deleteCount[fretNum]].hammerOn = theLast;
 	};
 
 
 	for(auto& a : *guitarTrackTmp)
 		if(!a.empty())
+		{
 			last = a[0];
-
+			break;
+		}
+	
 	for(auto& a : *guitarTrackTmp)
 		if(!a.empty())
 			last = last.noteOn > a[0].noteOn ? a[0] : last;
 
 	int index = 0;
 	for(auto& a : *guitarTrackTmp)
-		if(index++, (!a.empty() && a[0] == last))
+		if(++index, (!a.empty() && a[0] == last))
 			a.erase(a.begin()), deleteCount[index - 1]++;
 
 	while([]()->bool{for(auto& a : *guitarTrackTmp)if(!a.empty())return true; return false; }())
@@ -599,7 +600,10 @@ void openSong(string songFile)
 
 		for(auto a : (*guitarTrackTmp))
 			if(!a.empty())
+			{
 				last = a[0];
+				break;
+			}
 
 		for(auto& a : (*guitarTrackTmp))
 			if(!a.empty())
@@ -618,40 +622,39 @@ void openSong(string songFile)
 						(*guitarTrack)[2].size(),(*guitarTrack)[3].size(),
 						(*guitarTrack)[4].size()});
 
-	auto& track = (*guitarTrack);
-	for(int a = 1; a < maxi; ++a)
-	{
-		for(int b = 4; b >= 0; b--)
-			if(a < track[b].size())
-			{
-				if(!((track[b][a].noteOn - track[b][a - 1].noteOff)))
-					track[b][a].hammerOn = false;
-				if(track[b][a].link.first >= 0)
-				{
-					auto tmp = track[b][a];
-					bool isHammeron = tmp.hammerOn;
-					while(tmp.link.first >= 0)
-					{
-						if(tmp.hammerOn == false)
-						{
-							isHammeron = false;
-							break;
-						}
-						tmp = track[tmp.link.first][tmp.link.second];
-					}
-
-					track[b][a].hammerOn = isHammeron;
-					pair<int, int> tmp2 = track[b][a].link;
-					//pair<int, int> tmp3 = tmp.link;
-					while(tmp2.first >= 0)
-					{
-						track[tmp2.first][tmp2.second].hammerOn = isHammeron;
-						tmp2 = track[tmp2.first][tmp2.second].link;
-					}
-
-				}
-			}
-	}
+	//auto& track = (*guitarTrack);
+	//for(int a = 1; a < maxi; ++a)
+	//{
+	//	for(int b = 4; b >=0; b--)
+	//		if(a < track[b].size())
+	//		{
+	//			
+	//			if(track[b][a].link.first >= 0)
+	//			{
+	//				auto tmp = track[b][a];
+	//				bool isHammeron = tmp.hammerOn;
+	//				while(tmp.link.first >= 0)
+	//				{
+	//					tmp = track[tmp.link.first][tmp.link.second];
+	//					if(tmp.hammerOn == false)
+	//					{
+	//						isHammeron = false;
+	//						break;
+	//					}
+	//				}
+	//
+	//				track[b][a].hammerOn = isHammeron;
+	//				pair<int, int> tmp2 = track[b][a].link;
+	//				//pair<int, int> tmp3 = tmp.link;
+	//				while(tmp2.first >= 0)
+	//				{
+	//					track[tmp2.first][tmp2.second].hammerOn = isHammeron;
+	//					tmp2 = track[tmp2.first][tmp2.second].link;
+	//				}
+	//
+	//			}
+	//		}
+	//}
 
 
 

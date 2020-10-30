@@ -58,13 +58,12 @@ void EmConsole::setFullScreen(bool full)
 		//SetConsoleDisplayMode(_con[_buff], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
 		SetConsoleDisplayMode(m_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
 		SetConsoleDisplayMode(m_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-	}
-	else
+	} else
 	{
 		//SetConsoleDisplayMode(_con[_buff], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
 		SetConsoleDisplayMode(m_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
 		SetConsoleDisplayMode(m_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		m_full = full;
+		this->m_full = full;
 		setConsoleSize(sz.X, sz.Y);
 	}
 	m_full = full;
@@ -131,26 +130,26 @@ void EmConsole::setConsoleSize(ushort width, ushort height)
 {
 	if(!m_full)
 	{
-		COORD sz = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));//largest buffer size
-		static SMALL_RECT SIZE;
+		m_sz = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));//largest buffer size
+		static SMALL_RECT _SIZE;
 
 		//window dimentions
-		SIZE.Top = 0;
-		SIZE.Left = 0;
-		SIZE.Bottom = height < sz.Y ? height - 1 : sz.Y - 1;
-		SIZE.Right = width < sz.X ? width - 1 : sz.X - 1;
+		_SIZE.Top = 0;
+		_SIZE.Left = 0;
+		_SIZE.Bottom = height < m_sz.Y ? (SHORT)height - 1 : (SHORT)m_sz.Y - 1;
+		_SIZE.Right = width < m_sz.X ? (SHORT)width - 1 : (SHORT)m_sz.X - 1;
 
 		if(!m_resizable)
 			sz = {SIZE.Right + 1,SIZE.Bottom + 1};
 
-		SetConsoleScreenBufferSize(m_con[!m_buff], sz);
-		SetConsoleWindowInfo(m_con[!m_buff], true, &SIZE);
+		SetConsoleScreenBufferSize(m_con[!m_buff], m_sz);
+		SetConsoleWindowInfo(m_con[!m_buff], true, &_SIZE);
 
-		SetConsoleScreenBufferSize(m_con[m_buff], sz);
-		SetConsoleWindowInfo(m_con[m_buff], true, &SIZE);
+		SetConsoleScreenBufferSize(m_con[m_buff], m_sz);
+		SetConsoleWindowInfo(m_con[m_buff], true, &_SIZE);
 
-		//_conWidth = SIZE.Right;
-		//_conHeight = SIZE.Bottom;
+		m_conWidth = _SIZE.Right;
+		m_conHeight = _SIZE.Bottom;
 	}
 }
 
@@ -260,17 +259,17 @@ vector<int> EmConsole::readConsoleLineAtributes(int x, int y, float width)
 	strSize.Right = (SHORT)x + (SHORT)width;
 
 	//LPWORD a = new WORD[width];
-	CHAR_INFO* _ci = new CHAR_INFO[(UINT)width];
-	ReadConsoleOutputA(m_con[m_buff], _ci, {(SHORT)width,1}, {(SHORT)0,(SHORT)0}, &strSize);
+	m_ci = new CHAR_INFO[(UINT)width];
+	ReadConsoleOutputA(m_con[m_buff], m_ci, {(SHORT) width,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
 
 	vector<int>c;
-	for(int d = 0; d < width; c.push_back(_ci[d++].Attributes));
+	for(int d = 0; d < width; c.push_back(m_ci[d++].Attributes));
 
 
 	//for(int d = 0; d < width; c.push_back(a[d++]))
 	//	OutputDebugStringA((to_string(a[d])+", ").c_str());
 	//OutputDebugStringA("\nend\n");
-	delete[] _ci;
+	delete[] m_ci;
 	return c;
 
 }
@@ -292,8 +291,8 @@ wstring EmConsole::readConsoleLine(int x, int y, float width)
 	strSize.Left = (SHORT)x;
 	strSize.Right = (SHORT)x + (SHORT)width;
 
-	CHAR_INFO* _ci = new CHAR_INFO[(UINT)width];
-	ReadConsoleOutputA(m_con[m_buff], _ci, {(SHORT)width,1}, {(SHORT)0,(SHORT)0}, &strSize);
+	m_ci = new CHAR_INFO[(UINT)width];
+	ReadConsoleOutputA(m_con[m_buff], m_ci, {(SHORT) width,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
 
 	//vector<int>e;
 	//for(int d = 0; d < width; e.push_back(ci[d++].Attributes))
@@ -301,8 +300,8 @@ wstring EmConsole::readConsoleLine(int x, int y, float width)
 //	OutputDebugStringA("\nend\n");
 	wstring c;
 
-	for(int a = 0; a < width; c += _ci[a++].Char.UnicodeChar);
-	delete[]_ci;
+	for(int a = 0; a < width; c += m_ci[a++].Char.UnicodeChar);
+	delete[]m_ci;
 	return c;
 
 }
@@ -328,8 +327,8 @@ char EmConsole::readActiveConsoleCharacter(int x, int y)
 	strSize.Left = (SHORT)x;
 	strSize.Right = (SHORT)x + 1;
 
-	CHAR_INFO* _ci = new CHAR_INFO;
-	ReadConsoleOutputA(m_con[!m_buff], _ci, {(SHORT)1,1}, {(SHORT)0,(SHORT)0}, &strSize);
+	m_ci = new CHAR_INFO;
+	ReadConsoleOutputA(m_con[!m_buff], m_ci, {(SHORT) 1,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
 
 	//vector<int>e;
 	//for(int d = 0; d < width; e.push_back(ci[d++].Attributes))
@@ -337,8 +336,8 @@ char EmConsole::readActiveConsoleCharacter(int x, int y)
 	//	OutputDebugStringA("\nend\n");
 	char c;
 
-	c = _ci->Char.AsciiChar;
-	delete _ci;
+	c = m_ci->Char.AsciiChar;
+	delete m_ci;
 	return c;
 }
 
@@ -377,21 +376,21 @@ void EmConsole::toConsoleBufferNS(wstring& str, float& poX, float& poY, int x, i
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	CHAR_INFO* _ci = new CHAR_INFO;
+	m_ci = new CHAR_INFO;
 
 	for(UINT a = 0; a < str.size(); a++)
 	{
 		if(str[a] != L' ')
 		{
-			_ci->Char.UnicodeChar = str[a];
-			_ci->Attributes = colour;
-			WriteConsoleOutputW(m_con[m_buff], _ci, {1,1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
+			m_ci->Char.UnicodeChar = str[a];
+			m_ci->Attributes = colour;
+			WriteConsoleOutputW(m_con[m_buff], m_ci, {1,1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
 		}
 		strSize.Left = (SHORT)++x;
 		strSize.Right = (SHORT)x + 1;
 	}
 
-	delete _ci;
+	delete m_ci;
 }
 
 /*
@@ -676,30 +675,27 @@ void EmConsole::toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int 
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	CHAR_INFO* ci = new CHAR_INFO[str.getWidth() * str.getHeight()];
+	m_ci = new CHAR_INFO[str.getWidth()*str.getHeight()];
 
 	for(UINT a = 0; a < str.getHeight(); a++)
 	{
 		for(UINT b = 0; b < str.getWidth(); b++)
 		{
 			if(b < str.getSprite()[a].size())
-				ci[b + a * str.getWidth()].Char.UnicodeChar = str.getSprite()[a][b];
+				m_ci[b + str.getWidth()*a].Char.UnicodeChar = str.getSprite()[a][b];
 			else
-				ci[b + a * str.getWidth()].Char.UnicodeChar = L' ';
-
-			ci[b + str.getWidth() * a].Attributes = colour;
-
+				m_ci[b + str.getWidth()*a].Char.UnicodeChar = L' ';
+			m_ci[b + str.getWidth()*a].Attributes = colour;
 		}
 		//static DWORD tmp = 0;
 		//consoleCursorPosition(x, y++);
 		//WriteConsoleW(m_con[m_buff], ci, (SHORT)str.getWidth(), &tmp, NULL);
 	}
 
-	//SetConsoleTextAttribute(m_con[m_buff], test);
-	WriteConsoleOutputW(m_con[m_buff], ci, {(SHORT)str.getWidth() ,(SHORT)str.getHeight()}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
+	WriteConsoleOutputW(m_con[m_buff], m_ci, {(SHORT) str.getWidth() ,(SHORT) str.getHeight()}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
 
 
-	delete[] ci;
+	delete[] m_ci;
 }
 
 /*
@@ -837,16 +833,16 @@ void EmConsole::toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int 
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	CHAR_INFO* _ci = new CHAR_INFO[wcslen(str)];
+	m_ci = new CHAR_INFO[wcslen(str)];
 
 	for(UINT a = 0; a < wcslen(str); a++)
 	{
-		_ci[a].Char.UnicodeChar = str[a];
-		_ci[a].Attributes = colour;
+		m_ci[a].Char.UnicodeChar = str[a];
+		m_ci[a].Attributes = colour;
 	}
 
-	WriteConsoleOutputW(m_con[m_buff], _ci, {(SHORT)wcslen(str),1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
-	delete[] _ci;
+	WriteConsoleOutputW(m_con[m_buff], m_ci, {(SHORT) wcslen(str),1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+	delete[] m_ci;
 }
 
 /*
@@ -935,16 +931,16 @@ void EmConsole::toConsoleBuffer(wstring& str, float& poX, float& poY, int x, int
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	CHAR_INFO* _ci = new CHAR_INFO[str.size()];
+	m_ci = new CHAR_INFO[str.size()];
 
 	for(UINT a = 0; a < str.size(); a++)
 	{
-		_ci[a].Char.UnicodeChar = str[a];
-		_ci[a].Attributes = colour[a];
+		m_ci[a].Char.UnicodeChar = str[a];
+		m_ci[a].Attributes = colour[a];
 	}
 
-	WriteConsoleOutputW(m_con[m_buff], _ci, {(SHORT)str.size(),1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
-	delete[] _ci;
+	WriteConsoleOutputW(m_con[m_buff], m_ci, {(SHORT) str.size(),1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+	delete[] m_ci;
 }
 
 /*
@@ -1041,6 +1037,22 @@ void EmConsole::toConsoleBuffer(wstring& str, int x, int y)
 	toConsoleBuffer(str, x, y, FG_WHITE);
 }
 
+void PrintLastError(const char* head, int code)
+{
+	void* lpMsgBuf = nullptr;
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		(DWORD)code,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,
+		0, NULL);
+
+	OutputDebugStringA((std::string(head) + (const char*)lpMsgBuf).c_str());
+	OutputDebugStringA("\n");
+}
 
 /*Draws the console (choose to clear console buffer after draw)
 *Note:
@@ -1049,11 +1061,28 @@ void EmConsole::toConsoleBuffer(wstring& str, int x, int y)
 void EmConsole::drawConsole(bool clear)
 {
 	if(!m_full)
-		setConsoleSize(getWidth(), getHeight());
+		if(m_resizable)
+			setConsoleSize(getWidth(), getHeight());
+		else
+			setConsoleSize(m_conWidth + 1, m_conHeight + 1);
+	CONSOLE_FONT_INFOEX fontEX;
+	fontEX.cbSize = sizeof(fontEX);
+	if(GetCurrentConsoleFontEx(m_con[m_buff], m_full, &fontEX))
+	{
+		fontEX.dwFontSize.X = 6;
+		fontEX.dwFontSize.Y = 13;
+		fontEX.FontFamily = FF_DONTCARE;
+		SetCurrentConsoleFontEx(m_con[m_buff], m_full, &fontEX);
+	}
+	
+
+	//PrintLastError("Console Font: ", GetLastError());
 
 	if(!clear)
 	{
 		SetConsoleActiveScreenBuffer(m_con[m_buff]);
+
+
 
 		//have not tested yet
 		//swap(_con[_buff], _con[!_buff]);
@@ -1070,8 +1099,9 @@ void EmConsole::drawConsole(bool clear)
 		m_buff = !m_buff;
 		clearConsole();
 	}
-}
+	
 
+}
 
 /*Clears the console*/
 void EmConsole::clearConsole()

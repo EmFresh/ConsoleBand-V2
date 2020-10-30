@@ -1077,4 +1077,15 @@ public:
 
 private:
 
+	CHAR_INFO * m_ci;
+	CHAR_INFO **m_ci2;
+	DWORD oldInputMode, newInputMode;
+
+	COORD m_cursorPosition;
+	HANDLE m_con[2], m_input;
+	INPUT_RECORD m_inputRecord[128];
+	COORD m_sz = { 0,0 };
+	UINT m_conWidth, m_conHeight;
+	bool m_buff = 0, m_resizable, m_full = 0;
+
 };
