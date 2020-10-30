@@ -163,7 +163,7 @@ void openSong(string songFile)
 	theTracks->clear();
 	initPressed.clear();
 	pressed.clear();
-	for(int a = 0; a < trackInfo->size(); a++)
+	for(int a = 0; a < (int)trackInfo->size(); a++)
 	{
 
 		pressed.push_back(vector<bool>(5));
@@ -414,7 +414,7 @@ void openSong(string songFile)
 				continue;
 			}
 
-			for(int c = 0; c < trackInfo->size(); c++)
+			for(int c = 0; c < (int)trackInfo->size(); c++)
 			{
 				if(trackInfo[0][c].instrument == "guitar")
 					if(trackStr == "PART GUITAR")
@@ -494,7 +494,7 @@ void openSong(string songFile)
 	file.clear();
 
 
-	for(int a = 0; a < lyrics->size(); a++)
+	for(int a = 0; a < (int)lyrics->size(); a++)
 	{
 		if(!lyrics[0][a].size())//get rid of empty vectors
 			lyrics->erase(lyrics->begin() + a),
@@ -503,7 +503,7 @@ void openSong(string songFile)
 
 		if(a>0)//create blank spaces in long pauses
 		{
-			if(a < lyrics->size())
+			if(a < (int)lyrics->size())
 				if(!lyrics[0][a].size())
 					continue;
 
@@ -618,7 +618,7 @@ void missFX(int index, int seed)
 long myMax(vector<vector<vector<pair<long, long>>>> * a_max)
 {
 	auto maxi = a_max[0][0].size();
-	for(int a = 1; a < a_max->size(); a++)
+	for(int a = 1; a < (int)a_max->size(); a++)
 	{
 		maxi = max(maxi, a_max[0][a].size());
 	}
@@ -853,7 +853,7 @@ void drawLines()
 
 	int barNum = 4;
 	int count = 0;
-	for(int b = 0; b < theTrackTmps->size(); b++)
+	for(int b = 0; b < (int)theTrackTmps->size(); b++)
 	{
 		for(uint a = 0; a < lines->size(); a++)
 			if(incriment > 0)
@@ -1056,7 +1056,7 @@ void playPauseMenu()
 void playSongMovement()
 {
 	int count = 0;
-	for(int c = 0; c < theTrackTmps->size(); c++)
+	for(int c = 0; c < (int)theTrackTmps->size(); c++)
 	{//Note Movement
 		if(trackInfo[0][c].instrument == "guitar")
 			for(short a = 0; a < (short)theTrackTmps[0][c].size(); a++)
@@ -1274,7 +1274,7 @@ void playButtonPress()
 				noteSpeed = spacingScale * 2,
 				noteSpeed *= int(speedPercent += (newSpeed ? .25f : -.25f));
 
-		for(int b = 0; b < theTracks->size(); b++)
+		for(int b = 0; b < (int)theTracks->size(); b++)
 		{
 			if(trackInfo[0][b].instrument == "guitar" || trackInfo[0][b].instrument == "rhythm")
 			{
@@ -1391,7 +1391,7 @@ void playTrack()
 	t1->detach();
 	con->toConsoleBuffer((*track)[trackInfo[0][0].instrument == "guitar" || trackInfo[0][0].instrument == "rhythm" ? 0 : 1], centerTrack, 0);
 	int count = 0;
-	for(int a = 1; a < trackInfo->size(); a++)
+	for(int a = 1; a < (int)trackInfo->size(); a++)
 	{
 		count += (*track)[trackInfo[0][a - 1].instrument == "guitar" || trackInfo[0][a - 1].instrument == "rhythm" ? 0 : 1].getWidth();
 		con->toConsoleBuffer((*track)[trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? 0 : 1], centerTrack +
@@ -1405,18 +1405,19 @@ void playTrack()
 	con->toConsoleBuffer(*percentstr, con->getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
 
 	count = 0;
-	for(int a = 0; a < trackInfo->size(); a++)
+	for(int a = 0; a < (int)trackInfo->size(); a++)
 	{
 
 		// draws frets that light up when key is pressed
 		if(trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm")
-			for(short a = 0; a < 5; a++)
-				con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, fretboardPosition, (*fretColour)[a]);
+			for(short b = 0; b < 5; b++)
+				con->toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*fretColour)[b]);
+
 		else if(trackInfo[0][a].instrument == "drum")
 		{
 			con->toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, fretboardPosition + 1, (*padColour)[0]);
-			for(short a = 0; a < 4; a++)
-				con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, fretboardPosition, (*padColour)[a + 1]);
+			for(short b = 0; b < 4; b++)
+				con->toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*padColour)[b + 1]);
 		}
 
 		count += (*track)[trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? 0 : 1].getWidth();
@@ -1890,10 +1891,10 @@ bool difficultyMenu()
 
 		}
 
-		if([&]()->bool {int counter = 0; for(int a = 0; a < 4; a++)counter += ready[a]; return counter == trackInfo->size() && counter > 0; }())
+		if([&]()->bool {int counter = 0; for(int a = 0; a < 4; a++)counter += ready[a]; return counter == (int)trackInfo->size() && counter > 0; }())
 			return true;
 
-		for(int b = 0; b < trackInfo->size(); b++)
+		for(int b = 0; b < (int)trackInfo->size(); b++)
 		{
 			trackInfo[0][b].instrument = instruments2[selectx[trackInfo[0][b].player]];
 
@@ -1986,7 +1987,7 @@ void reset()
 				AudioPlayer::createAudioStream(string(ogg.begin(), ogg.end()).c_str());
 	}
 
-	for(int a = 0; a < theTrackTmps->size(); a++)
+	for(int a = 0; a < (int)theTrackTmps->size(); a++)
 		theTrackTmps[0][a].clear();
 
 	theTrackTmps[0] = theTracks[0];
@@ -2167,7 +2168,7 @@ int main()
 				AudioPlayer::update();
 
 				centerTrack = con->getWidth() / 2;
-				for(int a = 0; a < trackInfo->size(); a++)
+				for(int a = 0; a < (int)trackInfo->size(); a++)
 					centerTrack -= trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? (*track)[0].getWidth() / 2 : (*track)[1].getWidth() / 2;
 				fretboardPosition = con->getHeight() - 7;
 				//	fretboardXPosition = (centerTrack) + (a * 13 + 2)

@@ -267,12 +267,12 @@ void EmGineAudioPlayer::cleanup()
 
 void EmGineAudioPlayer::printError(FMOD_RESULT error, const char* where)
 {
-
+	where;
 	if(error)
 	{
 #if _DEBUG
-		std::string str(FMOD_ErrorString(error));
-		OutputDebugStringA(("Error:\n" + str + '\n' + where + "\n\n").c_str());
+		//std::string str(FMOD_ErrorString(error));
+		//OutputDebugStringA(("Error:\n" + str + '\n' + where + "\n\n").c_str());
 #endif
 	}
 }

@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-#define newstr new char
+//#define newstr new char*
 typedef unsigned short ushort;
 /*Enums*/
 /*
