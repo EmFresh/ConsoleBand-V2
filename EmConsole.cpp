@@ -4,87 +4,114 @@
 **************************************************/
 
 #include "EmConsole.h"
+#include <io.h>
+#include <fcntl.h>
 
 using namespace std;
+/**Variables**/
+
+static DWORD oldInputMode, newInputMode;
+
+//static COORD _cursorPosition;
+static HANDLE m_con[2]/*, _input*/;
+static INPUT_RECORD m_inputRecord[128];
+
+//static UINT _conWidth, _conHeight;
+static bool m_buff, m_resizable, m_full, m_init;
 
 bool MouseInput::doubleClick;
-short MouseInput::vertWheel=0, MouseInput::horiWheel=0;
+short MouseInput::vertWheel = 0, MouseInput::horiWheel = 0;
 COORD MouseInput::position;
 std::map <short, bool> MouseInput::buttons;
 
 /***Constructers***/
 
-EmConsole::EmConsole(string& title)
+void EmConsole::init()
 {
-	SetConsoleOutputCP(CP_WINUNICODE);
-	//int s=CP_INSTALLED;
+	if(m_init) return;
+	m_init = true;
+	_setmode(_fileno(stdout), _O_U16TEXT);
 
-	SetConsoleTitleA(title.c_str());
-	_cursorPosition.X = 0;
-	_cursorPosition.Y = 0;
-	_con[0] = GetStdHandle(STD_OUTPUT_HANDLE);
-	_con[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+	SetConsoleTitleA("EmGine Console Window");
+	SetConsoleOutputCP(CP_UTF8);
+
+	m_con[0] = GetStdHandle(STD_OUTPUT_HANDLE);
+	m_con[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	setConsoleSize(0, 0);
 }
-
-EmConsole::EmConsole(const char * title)
-{
-	SetConsoleTitleA(title);
-	SetConsoleOutputCP(CP_WINUNICODE);
-	
-	_cursorPosition.X = 0;
-	_cursorPosition.Y = 0;
-	
-	_con[0] = GetStdHandle(STD_OUTPUT_HANDLE);
-	_con[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-
-	_input = GetStdHandle(STD_INPUT_HANDLE);
-	GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &oldInputMode);
-	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), newInputMode = (oldInputMode|ENABLE_MOUSE_INPUT) & ~ENABLE_QUICK_EDIT_MODE);
-
-	//_setmode(_fileno(stdout), _O_U16TEXT); //sets the console to UTF16 mode.
-
-	setConsoleSize(0, 0);
-}
-
-EmConsole::EmConsole()
-{
-	SetConsoleTitleA("New Window");
-	_cursorPosition.X = 0;
-	_cursorPosition.Y = 0;
-	_con[0] = GetStdHandle(STD_OUTPUT_HANDLE);
-	_con[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-	setConsoleSize(0, 0);
-}
-
 
 /***Functions**/
 
 //Sets the window to full screen
 void EmConsole::setFullScreen(bool full)
 {
-	if(_full == full)
+	if(m_full == full)
 		return;
-	
+
 	static COORD sz;
-	
+
 	if(full)
 	{
 		sz = getConsoleSize();
 		COORD sz2 = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));
 		setConsoleSize(sz2.X, sz2.Y);
 		//SetConsoleDisplayMode(_con[_buff], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		SetConsoleDisplayMode(_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		SetConsoleDisplayMode(_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-	} else
+		SetConsoleDisplayMode(m_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
+		SetConsoleDisplayMode(m_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
+	}
+	else
 	{
 		//SetConsoleDisplayMode(_con[_buff], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		SetConsoleDisplayMode(_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		SetConsoleDisplayMode(_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
-		this->_full = full;
+		SetConsoleDisplayMode(m_con[0], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
+		SetConsoleDisplayMode(m_con[1], (full ? CONSOLE_FULLSCREEN_MODE : CONSOLE_WINDOWED_MODE), nullptr);
+		m_full = full;
 		setConsoleSize(sz.X, sz.Y);
 	}
-	this->_full = full;
+	m_full = full;
+}
+
+bool EmConsole::getFullScreen()
+{
+	return m_full;
+}
+
+/*
+summary:
+Creates a vector of vector string (2D vector) from a txt file
+
+Usage:
+To use this function effectively make sure your *.txt file has
+no empty lines in the beginning or end of it (so no extra
+vectors are not accidentaly created). Also, make sure ther is only one
+space seperating every sprite from each other (for the same reason as before).
+if done correctly you will basically have a sprite sheet that can be usefull for
+character movement or switching items or whatever.
+*/
+void EmConsole::textFileToVector(string file, vector<vector<wstring>>& str)
+{
+
+	wfstream ascii(file, ios::in);
+
+	try//if(ascii.is_open())
+	{
+		wstring line;
+
+		str.push_back(vector<wstring>());
+
+		for(int a = 0; getline(ascii, line); a++)
+		{
+			if(line.size() == 0)
+			{
+				str.push_back(vector<wstring>());
+				continue;
+			}
+			else if(line.size() > 0)
+				str[a].push_back(line);
+			//OutputDebugString((line + "\n").c_str());
+		}
+	} catch(...) {}
+
+	ascii.close();
 }
 
 vector<vector<wstring>> EmConsole::textFileToVector(string file)
@@ -94,35 +121,36 @@ vector<vector<wstring>> EmConsole::textFileToVector(string file)
 	return str;
 }
 
-//Sets title
 void EmConsole::setTitle(string title)
 {
 	SetConsoleTitleA(title.c_str());
 }
 
 //Sets the console size
-void EmConsole::setConsoleSize(int width, int height)
+void EmConsole::setConsoleSize(ushort width, ushort height)
 {
-	if(!_full)
+	if(!m_full)
 	{
-		_sz = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));//largest buffer size
-		static SMALL_RECT _SIZE;
+		COORD sz = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));//largest buffer size
+		static SMALL_RECT SIZE;
 
 		//window dimentions
-		_SIZE.Top = 0;
-		_SIZE.Left = 0;
-		_SIZE.Bottom = height < _sz.Y ? (SHORT)height - 1 : (SHORT)_sz.Y - 1;
-		_SIZE.Right = width < _sz.X ? (SHORT)width - 1 : (SHORT)_sz.X - 1;
+		SIZE.Top = 0;
+		SIZE.Left = 0;
+		SIZE.Bottom = height < sz.Y ? height - 1 : sz.Y - 1;
+		SIZE.Right = width < sz.X ? width - 1 : sz.X - 1;
 
+		if(!m_resizable)
+			sz = {SIZE.Right + 1,SIZE.Bottom + 1};
 
-		SetConsoleScreenBufferSize(_con[!_buff], _sz);
-		SetConsoleWindowInfo(_con[!_buff], true, &_SIZE);
+		SetConsoleScreenBufferSize(m_con[!m_buff], sz);
+		SetConsoleWindowInfo(m_con[!m_buff], true, &SIZE);
 
-		SetConsoleScreenBufferSize(_con[_buff], _sz);
-		SetConsoleWindowInfo(_con[_buff], true, &_SIZE);
+		SetConsoleScreenBufferSize(m_con[m_buff], sz);
+		SetConsoleWindowInfo(m_con[m_buff], true, &SIZE);
 
-		_conWidth = _SIZE.Right;
-		_conHeight = _SIZE.Bottom;
+		//_conWidth = SIZE.Right;
+		//_conHeight = SIZE.Bottom;
 	}
 }
 
@@ -134,9 +162,9 @@ COORD EmConsole::getConsoleSize()
 	//COORD size;
 	//int columns, rows;
 
-	if(!_full)
+	if(!m_full)
 	{
-		GetConsoleScreenBufferInfo(_con[!_buff], &csbi);
+		GetConsoleScreenBufferInfo(m_con[!m_buff], &csbi);
 
 		//columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
 		//rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
@@ -159,11 +187,11 @@ int EmConsole::getHeight()
 	return getConsoleSize().Y;
 }
 
-void EmConsole::printf(const char *print ...)
+void EmConsole::printf(const char* print ...)
 {
 
 	static int printNum = 0;
-	wchar_t *buff = new wchar_t[128];
+	wchar_t* buff = new wchar_t[128];
 	va_list arg;
 	va_start(arg, print);
 	vswprintf(buff, 128, L"%p", arg);
@@ -171,13 +199,18 @@ void EmConsole::printf(const char *print ...)
 
 
 	toConsoleBuffer(buff, printNum++, 0);
-	delete buff;
+	delete[] buff;
 }
 
 //Sets weather or not the window can be resized
-void EmConsole::setResizable(bool resz)
+void EmConsole::setResizeable(bool resz)
 {
-	_resizable = resz;
+	m_resizable = resz;
+}
+
+bool EmConsole::getResizeable()
+{
+	return m_resizable;
 }
 
 //Sets console position
@@ -198,62 +231,24 @@ void EmConsole::placeConsoleCenter()
 	if(cw.top != 0)
 		cw.bottom -= cw.top,
 		cw.top -= cw.top;
-	SetWindowPos(GetConsoleWindow(), NULL,(int) ((dw.right / 2) - (cw.right / 2)), (int)(floor((float) dw.bottom / 2) - floor((float)cw.bottom / 2)), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
+	SetWindowPos(GetConsoleWindow(), NULL, (int)((dw.right / 2) - (cw.right / 2)), (int)(floor((float)dw.bottom / 2) - floor((float)cw.bottom / 2)), NULL, NULL, SWP_NOSIZE | SWP_NOZORDER);
 }
 
 //Sets console cursor position
 void EmConsole::consoleCursorPosition(int x, int y)
 {
+	static COORD _cursorPosition;
 	_cursorPosition.X = (SHORT)x;
 	_cursorPosition.Y = (SHORT)y;
 	CONSOLE_CURSOR_INFO info;
 	info.bVisible = false;
 	info.dwSize = 1;
-	SetConsoleCursorInfo(_con[!_buff], &info);
-	SetConsoleCursorPosition(_con[!_buff], _cursorPosition);
-	//SetConsoleCursorInfo(con[1], &info);
+	SetConsoleCursorInfo(m_con[m_buff], &info);
+	SetConsoleCursorPosition(m_con[m_buff], _cursorPosition);
+	//SetConsoleCursorInfo(con[1], &infoex);
 	//SetConsoleCursorPosition(con[1], cursorPosition);
 }
 
-/*
-summary:
-Creates a vector of vector string (2D vector) from a txt file
-
-Usage:
-To use this function effectively make sure your *.txt file has
-no empty lines in the beginning or end of it (so no extra
-vectors are not accidentaly created). Also, make sure ther is only one
-space seperating every sprite from each other (for the same reason as before).
-if done correctly you will basically have a sprite sheet that can be usefull for
-character movement or switching items or whatever.
-*/
-void EmConsole::textFileToVector(string file, vector<vector<wstring>> &str)
-{
-
-	wfstream ascii(file, wfstream::in);
-
-	try//if(ascii.is_open())
-	{
-		wstring line;
-
-		str.push_back(vector<wstring>());
-
-		for(int a = 0; getline(ascii, line); a++)
-		{
-			if(line.size() == 0)
-			{
-				str.push_back(vector<wstring>());
-				continue;
-			} else if(line.size() > 0)
-				str[a].push_back(line);
-			//OutputDebugString((line + "\n").c_str());
-		}
-	} catch(...)
-	{
-	}
-
-	ascii.close();
-}
 
 /*special stuff for tetris (don't even try to understand)*/
 vector<int> EmConsole::readConsoleLineAtributes(int x, int y, float width)
@@ -265,8 +260,8 @@ vector<int> EmConsole::readConsoleLineAtributes(int x, int y, float width)
 	strSize.Right = (SHORT)x + (SHORT)width;
 
 	//LPWORD a = new WORD[width];
-	_ci = new CHAR_INFO[(UINT)width];
-	ReadConsoleOutputA(_con[_buff], _ci, {(SHORT) width,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
+	CHAR_INFO* _ci = new CHAR_INFO[(UINT)width];
+	ReadConsoleOutputA(m_con[m_buff], _ci, {(SHORT)width,1}, {(SHORT)0,(SHORT)0}, &strSize);
 
 	vector<int>c;
 	for(int d = 0; d < width; c.push_back(_ci[d++].Attributes));
@@ -297,8 +292,8 @@ wstring EmConsole::readConsoleLine(int x, int y, float width)
 	strSize.Left = (SHORT)x;
 	strSize.Right = (SHORT)x + (SHORT)width;
 
-	_ci = new CHAR_INFO[(UINT)width];
-	ReadConsoleOutputA(_con[_buff], _ci, {(SHORT) width,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
+	CHAR_INFO* _ci = new CHAR_INFO[(UINT)width];
+	ReadConsoleOutputA(m_con[m_buff], _ci, {(SHORT)width,1}, {(SHORT)0,(SHORT)0}, &strSize);
 
 	//vector<int>e;
 	//for(int d = 0; d < width; e.push_back(ci[d++].Attributes))
@@ -333,8 +328,8 @@ char EmConsole::readActiveConsoleCharacter(int x, int y)
 	strSize.Left = (SHORT)x;
 	strSize.Right = (SHORT)x + 1;
 
-	_ci = new CHAR_INFO;
-	ReadConsoleOutputA(_con[!_buff], _ci, {(SHORT) 1,1}, {(SHORT) 0,(SHORT) 0}, &strSize);
+	CHAR_INFO* _ci = new CHAR_INFO;
+	ReadConsoleOutputA(m_con[!m_buff], _ci, {(SHORT)1,1}, {(SHORT)0,(SHORT)0}, &strSize);
 
 	//vector<int>e;
 	//for(int d = 0; d < width; e.push_back(ci[d++].Attributes))
@@ -370,7 +365,7 @@ specified (x,y) position from the origin (poX, poY)
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBufferNS(wstring &str, float& poX, float& poY, int x, int y, int colour)
+void EmConsole::toConsoleBufferNS(wstring& str, float& poX, float& poY, int x, int y, int colour)
 {
 	consoleCursorPosition(0, 0);
 	SMALL_RECT strSize;
@@ -382,7 +377,7 @@ void EmConsole::toConsoleBufferNS(wstring &str, float& poX, float& poY, int x, i
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	_ci = new CHAR_INFO;
+	CHAR_INFO* _ci = new CHAR_INFO;
 
 	for(UINT a = 0; a < str.size(); a++)
 	{
@@ -390,7 +385,7 @@ void EmConsole::toConsoleBufferNS(wstring &str, float& poX, float& poY, int x, i
 		{
 			_ci->Char.UnicodeChar = str[a];
 			_ci->Attributes = colour;
-			WriteConsoleOutputW(_con[_buff], _ci, {1,1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+			WriteConsoleOutputW(m_con[m_buff], _ci, {1,1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
 		}
 		strSize.Left = (SHORT)++x;
 		strSize.Right = (SHORT)x + 1;
@@ -412,7 +407,7 @@ Adds single line to the console to the
 specified (x,y) position from the origin (poX, poY)
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBufferNS(wstring &str, float& poX, float& poY, int x, int y)
+void EmConsole::toConsoleBufferNS(wstring& str, float& poX, float& poY, int x, int y)
 {
 	toConsoleBufferNS(str, poX, poY, x, y, FG_WHITE);
 }
@@ -430,7 +425,7 @@ specified (x,y) position from the top left corner
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBufferNS(wstring &str, int x, int y, int colour)
+void EmConsole::toConsoleBufferNS(wstring& str, int x, int y, int colour)
 {
 	float poX = 0.f, poY = 0.f;
 	toConsoleBufferNS(str, poX, poY, x, y, colour);
@@ -447,7 +442,7 @@ Adds single line to the console to the
 specified (x,y) position from the top left corner
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBufferNS(wstring &str, int x, int y)
+void EmConsole::toConsoleBufferNS(wstring& str, int x, int y)
 {
 	toConsoleBufferNS(str, x, y, FG_WHITE);
 }
@@ -582,7 +577,7 @@ specified (x,y) position from the specified top left corner
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBufferNS(const wchar_t *str, int x, int y, int colour)
+void EmConsole::toConsoleBufferNS(const wchar_t* str, int x, int y, int colour)
 {
 	wstring* str2 = new wstring(str);
 	toConsoleBufferNS(*str2, x, y, colour);
@@ -600,7 +595,7 @@ Adds single line to the console to the
 specified (x,y) position from the specified top left corner
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBufferNS(const wchar_t *str, int x, int y)
+void EmConsole::toConsoleBufferNS(const wchar_t* str, int x, int y)
 {
 	wstring* str2 = new wstring(str);
 	toConsoleBufferNS(*str2, x, y);
@@ -621,7 +616,7 @@ Adds multiple lines to the console starting at the
 specified (x,y) position from the specified origin (poX, poY)
 to be drawn after drawConsole(); is called (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBuffer(Sprite& str, int x, int y, vector<vector<int>> &colour)
+void EmConsole::toConsoleBuffer(Sprite& str, int x, int y, vector<vector<int>>& colour)
 {
 	float p1 = 0, p2 = 0;
 	wstring str2;
@@ -650,6 +645,28 @@ void EmConsole::toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int 
 
 	consoleCursorPosition(0, 0);
 
+	////lets try this
+	//CONSOLE_SCREEN_BUFFER_INFOEX infoex;
+	//PCONSOLE_SCREEN_BUFFER_INFOEX;
+	//infoex.cbSize = sizeof(infoex);
+	////CONSOLE_SCREEN_BUFFER_INFO info;
+	//int tester = 0;
+	//if(GetConsoleScreenBufferInfoEx(m_con[m_buff], &infoex))
+	//	tester++;
+	////GetConsoleScreenBufferInfo(m_con[m_buff], &info);
+	////infoex.srWindow = info.srWindow;
+	////
+	//int test = 7;
+	//infoex.ColorTable[test] = RGB(colour.r, colour.g, colour.b);
+	//infoex;
+	//
+	//
+	//if(SetConsoleScreenBufferInfoEx(m_con[m_buff], &infoex))
+	//	tester++;
+	////SetConsoleScreenBufferSize(m_con[!m_buff], GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE)));
+
+
+
 	SMALL_RECT strSize;
 	strSize.Top = (SHORT)y;
 	strSize.Bottom = (SHORT)y + str.getHeight();
@@ -659,24 +676,30 @@ void EmConsole::toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int 
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	_ci = new CHAR_INFO[str.getWidth()*str.getHeight()];
+	CHAR_INFO* ci = new CHAR_INFO[str.getWidth() * str.getHeight()];
 
-	for(int a = 0; a < str.getHeight(); a++)
+	for(UINT a = 0; a < str.getHeight(); a++)
 	{
 		for(UINT b = 0; b < str.getWidth(); b++)
 		{
 			if(b < str.getSprite()[a].size())
-				_ci[b + str.getWidth()*a].Char.UnicodeChar = str.getSprite()[a][b];
+				ci[b + a * str.getWidth()].Char.UnicodeChar = str.getSprite()[a][b];
 			else
-				_ci[b + str.getWidth()*a].Char.UnicodeChar = L' ';
-			_ci[b + str.getWidth()*a].Attributes = colour;
+				ci[b + a * str.getWidth()].Char.UnicodeChar = L' ';
+
+			ci[b + str.getWidth() * a].Attributes = colour;
+
 		}
+		//static DWORD tmp = 0;
+		//consoleCursorPosition(x, y++);
+		//WriteConsoleW(m_con[m_buff], ci, (SHORT)str.getWidth(), &tmp, NULL);
 	}
 
-	WriteConsoleOutputW(_con[_buff], _ci, {(SHORT) str.getWidth() ,(SHORT) str.getHeight()}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+	//SetConsoleTextAttribute(m_con[m_buff], test);
+	WriteConsoleOutputW(m_con[m_buff], ci, {(SHORT)str.getWidth() ,(SHORT)str.getHeight()}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
 
 
-	delete[] _ci;
+	delete[] ci;
 }
 
 /*
@@ -734,24 +757,24 @@ void EmConsole::toConsoleBuffer(Sprite& str, int x, int y, int colour)
 	////poX = poX < 0 ? 0 : poX;
 	////poY = poY < 0 ? 0 : poY;
 	//
-	//_ci = new CHAR_INFO[str.getWidth()*str.getHeight()];
+	//ci = new CHAR_INFO[str.getWidth()*str.getHeight()];
 	//
 	//for(int a = 0; a < str.getHeight(); a++)
 	//{
 	//	for(int b = 0; b < str.getWidth(); b++)
 	//	{
 	//		if(b < str.getSprite()[a].size())
-	//			_ci[b + str.getWidth()*a].Char.UnicodeChar = str.getSprite()[a][b];
+	//			ci[b + str.getWidth()*a].Char.UnicodeChar = str.getSprite()[a][b];
 	//		else
-	//			_ci[b + str.getWidth()*a].Char.UnicodeChar = ' ';
-	//		_ci[b + str.getWidth()*a].Attributes = colour;
+	//			ci[b + str.getWidth()*a].Char.UnicodeChar = ' ';
+	//		ci[b + str.getWidth()*a].Attributes = colour;
 	//	}
 	//}
 	//
-	//WriteConsoleOutputW(_con[_buff], _ci, {(SHORT)str.getWidth() ,(SHORT)str.getHeight()}, COORD {(SHORT)0 , (SHORT)0}, &strSize);
+	//WriteConsoleOutputW(_con[_buff], ci, {(SHORT)str.getWidth() ,(SHORT)str.getHeight()}, COORD {(SHORT)0 , (SHORT)0}, &strSize);
 	//
 	//
-	//delete[] _ci;
+	//delete[] ci;
 }
 
 /*
@@ -769,7 +792,17 @@ void EmConsole::toConsoleBuffer(Sprite& str, int x, int y)
 {
 	//for(int a = 0; a < str.getHeight(); a++)
 	//	toConsoleBuffer(str.getSprite()[a], x, y++);
-	toConsoleBuffer(str, x, y, FG_WHITE);
+	toConsoleBuffer(str, x, y, str.getColour());
+}
+
+void EmConsole::toConsoleBuffer(Sprite& str)
+{
+	toConsoleBuffer(str, str.getX(), str.getY(), str.getColour());
+}
+
+void EmConsole::toConsoleBuffer(Sprite& str, int colour)
+{
+	toConsoleBuffer(str, str.getX(), str.getY(), colour);
 }
 
 /*
@@ -804,7 +837,7 @@ void EmConsole::toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int 
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	_ci = new CHAR_INFO[wcslen(str)];
+	CHAR_INFO* _ci = new CHAR_INFO[wcslen(str)];
 
 	for(UINT a = 0; a < wcslen(str); a++)
 	{
@@ -812,7 +845,7 @@ void EmConsole::toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int 
 		_ci[a].Attributes = colour;
 	}
 
-	WriteConsoleOutputW(_con[_buff], _ci, {(SHORT) wcslen(str),1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+	WriteConsoleOutputW(m_con[m_buff], _ci, {(SHORT)wcslen(str),1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
 	delete[] _ci;
 }
 
@@ -849,7 +882,7 @@ specified (x,y) position from the specified top left corner
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBuffer(const wchar_t *str, int x, int y, int colour)
+void EmConsole::toConsoleBuffer(const wchar_t* str, int x, int y, int colour)
 {
 	wstring* str2 = new wstring(str);
 	toConsoleBuffer(*str2, x, y, colour);
@@ -867,7 +900,7 @@ Adds single line to the console to the
 specified (x,y) position from the specified top left corner
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBuffer(const wchar_t *str, int x, int y)
+void EmConsole::toConsoleBuffer(const wchar_t* str, int x, int y)
 {
 	wstring* str2 = new wstring(str);
 	toConsoleBuffer(*str2, x, y);
@@ -889,7 +922,7 @@ specified (x,y) position from the origin (poX, poY)
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBuffer(wstring &str, float& poX, float& poY, int x, int y, vector<int> &colour)
+void EmConsole::toConsoleBuffer(wstring& str, float& poX, float& poY, int x, int y, vector<int>& colour)
 {
 	consoleCursorPosition(0, 0);
 
@@ -902,7 +935,7 @@ void EmConsole::toConsoleBuffer(wstring &str, float& poX, float& poY, int x, int
 	poX = poX < 0 ? 0 : poX;
 	poY = poY < 0 ? 0 : poY;
 
-	_ci = new CHAR_INFO[str.size()];
+	CHAR_INFO* _ci = new CHAR_INFO[str.size()];
 
 	for(UINT a = 0; a < str.size(); a++)
 	{
@@ -910,7 +943,7 @@ void EmConsole::toConsoleBuffer(wstring &str, float& poX, float& poY, int x, int
 		_ci[a].Attributes = colour[a];
 	}
 
-	WriteConsoleOutputW(_con[_buff], _ci, {(SHORT) str.size(),1}, COORD{(SHORT) poX , (SHORT) poY}, &strSize);
+	WriteConsoleOutputW(m_con[m_buff], _ci, {(SHORT)str.size(),1}, COORD{(SHORT)poX , (SHORT)poY}, &strSize);
 	delete[] _ci;
 }
 
@@ -929,7 +962,7 @@ specified (x,y) position from the origin (poX, poY)
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBuffer(wstring &str, float& poX, float& poY, int x, int y, int colour)
+void EmConsole::toConsoleBuffer(wstring& str, float& poX, float& poY, int x, int y, int colour)
 {
 	//consoleCursorPosition(0, 0);
 	//
@@ -968,7 +1001,7 @@ Adds single line to the console to the
 specified (x,y) position from the origin (poX, poY)
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBuffer(wstring &str, float& poX, float& poY, int x, int y)
+void EmConsole::toConsoleBuffer(wstring& str, float& poX, float& poY, int x, int y)
 {
 	toConsoleBuffer(str, poX, poY, x, y, FG_WHITE);
 }
@@ -986,7 +1019,7 @@ specified (x,y) position from the top left corner
 to be drawn after drawConsole(); is called
 (with text colour modification [see: enum colour in EmConsole.h])
 */
-void EmConsole::toConsoleBuffer(wstring &str, int x, int y, int colour)
+void EmConsole::toConsoleBuffer(wstring& str, int x, int y, int colour)
 {
 	float poX = 0.f, poY = 0.f;
 	toConsoleBuffer(str, poX, poY, x, y, colour);
@@ -1003,7 +1036,7 @@ Adds single line to the console to the
 specified (x,y) position from the top left corner
 to be drawn after drawConsole(); is called
 */
-void EmConsole::toConsoleBuffer(wstring &str, int x, int y)
+void EmConsole::toConsoleBuffer(wstring& str, int x, int y)
 {
 	toConsoleBuffer(str, x, y, FG_WHITE);
 }
@@ -1015,28 +1048,26 @@ void EmConsole::toConsoleBuffer(wstring &str, int x, int y)
 */
 void EmConsole::drawConsole(bool clear)
 {
-	if(!_full)
-		if(_resizable)
-			setConsoleSize(getWidth(), getHeight());
-		else
-			setConsoleSize(_conWidth + 1, _conHeight + 1);
+	if(!m_full)
+		setConsoleSize(getWidth(), getHeight());
 
 	if(!clear)
 	{
-		SetConsoleActiveScreenBuffer(_con[_buff]);
+		SetConsoleActiveScreenBuffer(m_con[m_buff]);
 
 		//have not tested yet
 		//swap(_con[_buff], _con[!_buff]);
 
 		//tryed and true
-		HANDLE temp = _con[_buff];
-		_con[_buff] = _con[!_buff];
-		_con[!_buff] = temp;
-		_buff = !_buff;
-	} else
+		HANDLE temp = m_con[m_buff];
+		m_con[m_buff] = m_con[!m_buff];
+		m_con[!m_buff] = temp;
+		m_buff = !m_buff;
+	}
+	else
 	{
-		SetConsoleActiveScreenBuffer(_con[_buff]);
-		_buff = !_buff;
+		SetConsoleActiveScreenBuffer(m_con[m_buff]);
+		m_buff = !m_buff;
 		clearConsole();
 	}
 }
@@ -1047,6 +1078,21 @@ void EmConsole::clearConsole()
 {
 	static DWORD _cCharsWritten;
 	COORD L = GetLargestConsoleWindowSize(GetStdHandle(STD_OUTPUT_HANDLE));
-	FillConsoleOutputCharacterA(_con[_buff], ' ', L.X * L.Y, COORD{0,0}, &_cCharsWritten);
-	FillConsoleOutputAttribute(_con[_buff], NULL, L.X * L.Y, COORD{0,0}, &_cCharsWritten);
+	FillConsoleOutputCharacterA(m_con[m_buff], ' ', L.X * L.Y, COORD{0,0}, &_cCharsWritten);
+	FillConsoleOutputAttribute(m_con[m_buff], NULL, L.X * L.Y, COORD{0,0}, &_cCharsWritten);
+}
+
+void Sprite::toBuffer(ushort x, ushort y)
+{
+	EmConsole::toConsoleBuffer(*this, x, y, m_colour);
+}
+
+void Sprite::toBufferNS(ushort x, ushort y)
+{
+	EmConsole::toConsoleBufferNS(*this, x, y, m_colour);
+}
+
+void Sprite::render()
+{
+	EmConsole::drawConsole();
 }

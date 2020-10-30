@@ -10,9 +10,11 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "Utilities.h"
 
-//#define newstr new char*
-typedef unsigned short ushort;
+//#define newstr new char
+//typedef unsigned short ushort;
+
 /*Enums*/
 /*
 summary:
@@ -64,11 +66,20 @@ struct Sprite
 {
 	Sprite() {}
 
+	Sprite(const Sprite& sprite, const char* tag = nullptr):
+		m_sprite(sprite.m_sprite), m_pos(sprite.m_pos), m_colour(sprite.m_colour),
+		m_width(sprite.m_width), m_height(sprite.m_height)
+	{
+
+		if(tag)
+			m_tag = tag;
+
+	}
+
 	Sprite(const char* file, char* tag = nullptr)
 	{
 		create(file, tag);
 	}
-
 	Sprite(std::vector<std::wstring>* sprite, char* tag = nullptr)
 	{
 		create(sprite, tag);
@@ -82,32 +93,44 @@ struct Sprite
 	Takes a .txt file and outputs into the Sprite.
 	The sprite will be overridden once this is called
 	*/
-	void create(const char* file, char* tag = nullptr)
+	virtual void create(const char* file, char* tag = nullptr)
 	{
 		setTag(tag);
-		FILE* f;
-		fopen_s(&f, file, "r, ccs=UNICODE");
 
-		//std::vector<std::wstring>* tmp = _sprite;
 		m_sprite.clear();
-
-		//std::vector<std::wstring>sprite;
 
 		m_height = m_width = 0;
 
-		wchar_t* str = new wchar_t[255];
+	#pragma region C-style
+		//FILE* f;
+		//fopen_s(&f, file, "r, ccs=UNICODE");
+		//wchar_t* str = new wchar_t[255];
+		//
+		//	while(str = fgetws(str, 255, f),
+		//		  m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
+		//		m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
+		//		m_height++;
+		//
+		//	m_sprite.pop_back();
+		//	if(f)
+		//		fclose(f);
+		//delete[] str;
+	#pragma endregion
 
-		while(str = fgetws(str, 255, f),
-			m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
-			//m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
-			m_width = max(m_width, (ushort)(m_sprite[m_height]).size()),
-		m_height ++;
+	#pragma region modern
 
-		m_sprite.pop_back();
-		fclose(f);
+		std::wfstream unicodeFile(file, std::ios::in);
+		std::wstring line;
+
+		for(int a = 0; getline(unicodeFile, line); a++)
+			m_sprite.push_back(line);
+
+		unicodeFile.close();
+
+	#pragma endregion
+
 	}
-
-	void create(std::vector<std::wstring> * sprite, char* tag = nullptr)
+	virtual void create(const std::vector<std::wstring>* sprite, char* tag = nullptr)
 	{
 		setTag(tag);
 
@@ -118,36 +141,56 @@ struct Sprite
 			m_width = m_width < (ushort)m_sprite[a].size() ? (ushort)m_sprite[a].size() : m_width;
 	}
 
-	bool boxCollision(Sprite s2, COORD p1, COORD p2)
-	{
-		p1 = {p1.X + m_width / 2,p1.Y + m_height / 2};
-		p2 = {p2.X + s2.m_width / 2,p2.Y + s2.m_height / 2};
+	virtual void toBuffer(ushort x, ushort y);
+	virtual void toBufferNS(ushort x, ushort y);
 
-		if(abs(p1.X - p2.X) <= m_width / 2 + s2.m_width / 2)
-			if(abs(p1.Y - p2.Y) <= m_height / 2 + s2.m_height / 2)
+	void render();
+
+	/*
+
+	************
+	  ********     *******
+		****
+		 **
+
+	*/
+	bool boxCollision(Sprite s2, Coord2D<> p1, Coord2D<> p2)
+	{
+		p1 = {p1.x + short(m_width * .5f) ,p1.y + short(m_height * .5f)};
+		p2 = {p2.x + short(s2.m_width * .5f), p2.y + short(s2.m_height * .5f)};
+
+		if(abs(p1.x - p2.x) < (m_width + s2.m_width) * .5f)
+			if(abs(p1.y - p2.y) < (m_height + s2.m_height) * .5f)
 				return true;
 		return false;
 	}
 
-	bool mouseCollision(COORD p1, COORD p2)
+	bool boxCollision(Sprite s2)
 	{
-		p1 = {p1.X + m_width / 2,p1.Y + m_height / 2};
-		p2 = {p2.X ,p2.Y};
+		Coord2D<> p1 = {m_pos.x  ,m_pos.y};
+		Coord2D<> p2 = {s2.m_pos.x  ,s2.m_pos.y};
+		return boxCollision(s2, p1, p2);
+	}
 
-		if(abs(p1.X - p2.X) <= m_width / 2)
-			if(abs(p1.Y - p2.Y) <= m_height / 2)
+	bool mouseCollision(Coord2D<> p1, Coord2D<> mouse)
+	{
+		p1 = {p1.x + short(m_width * .5f), p1.y + short(m_height * .5f)};
+
+		if(abs(p1.x - mouse.x) <= m_width * .5f)
+			if(abs(p1.y - mouse.y) <= m_height * .5f)
 				return true;
 		return false;
 	}
+	bool mouseCollision(Coord2D<> mouse)
+	{
+		Coord2D<> p1 = {m_pos.x + m_width, m_pos.y + m_height};
 
-	void setTag(char* tag)
+		return mouseCollision(p1, mouse);
+	}
+
+	void setTag(const char* tag)
 	{
 		m_tag = tag;
-	}
-
-	void setColour(short colour)
-	{
-		m_colour = colour;
 	}
 
 	const char* getTag()
@@ -155,45 +198,86 @@ struct Sprite
 		return m_tag;
 	}
 
+	void setColour(int colour)
+	{
+		m_colour = colour;
+	}
+	void setPosition(Coord2D<> pos) { m_pos = pos; }
+	void setX(float posx) { m_pos.x = posx; }
+	void setY(float posy) { m_pos.y = posy; }
+
+
+	int getColour() { return m_colour; }
+
 	std::wstring* getSprite()
 	{
 		return m_sprite.data();
 	}
 
-	unsigned short getWidth()
+	ushort getWidth()
 	{
 		return m_width;
 	}
 
-	unsigned short getHeight()
+	ushort getHeight()
 	{
 		return m_height;
 	}
 
-private:
+	Coord2D<> getPosition() { return m_pos; }
+	Coord2D<> getCenter() { return m_pos + Coord2D<>{(float)m_width, (float)m_height} *.5f; }
+
+	float getX() { return m_pos.x; }
+	float getY() { return m_pos.y; }
+
+	void operator=(Sprite sprite)
+	{
+		m_sprite = (sprite.m_sprite);
+		m_tag = (sprite.m_tag);
+		m_width = (sprite.m_width);
+		m_height = (sprite.m_height);
+		m_colour = (sprite.m_colour);
+	}
+
+protected:
 	std::vector<std::wstring> m_sprite;
-	char* m_tag = nullptr;
+	Coord2D<> m_pos{0,0};
+	const char* m_tag = nullptr;
 	ushort m_width = 0, m_height = 0;
-	short m_colour = 0;
+	int m_colour = FG_WHITE;
 };
 
 struct SpriteSheet
 {
 	SpriteSheet() {}
-
+	/*
+	Creates SpriteSheet from another spritesheet. Creates a new
+	Sprite when it finds a line in file with a lenght of zero
+	*/
+	SpriteSheet(const SpriteSheet& cpy)
+	{
+		m_sheet->clear();
+		for(auto& a : *cpy.m_sheet)
+			m_sheet->push_back(new Sprite(*a));
+	}
 	/*
 	Creates SpriteSheet from a .txt file. Creates a new
-	Sprite when it finds a line with a lenght of zero
+	Sprite when it finds a line in file with specified split character
 	*/
 	SpriteSheet(const char* file, const wchar_t* split = L"")
 	{
 		create(file, split);
 	}
 
+	~SpriteSheet()
+	{
+		clear();
+		delete m_sheet;
+	}
 
 	/*
 	Creates SpriteSheet from a .txt file. Creates a new
-	Sprite when it finds a line with a lenght of zero
+	Sprite when it finds a line with specified split character
 	*/
 	void create(const char* file, const wchar_t* split = L"")
 	{
@@ -209,8 +293,9 @@ struct SpriteSheet
 		fopen_s(&f, file, "r, ccs=UNICODE");
 
 		while(str2 = fgetws(str2, 255, f),
-			str = (str2 == nullptr ? L"" : (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
-			str2 != nullptr)
+			  str = (str2 == nullptr ? L"" :
+			  (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
+			  str2 != nullptr)
 		{
 			if(str == split)
 			{
@@ -234,49 +319,13 @@ struct SpriteSheet
 
 		if(height > 0)
 			add(&sprite);
-		delete str2;
+
+		delete[] str2;
 	}
 
-	void add(Sprite* sprite)
-	{
-		//Sprite **tmp = new Sprite*[++_numSprites],
-		//	**tmp2 = m_sheet;
-		//
-		////copy data
-		//for(int a = 0; a < _numSprites - 1; a++)
-		//	tmp[a] = new Sprite,
-		//	*(tmp[a]) = *(m_sheet[0][a]),
-		//	delete m_sheet[0][a];
-		//
-		////add sprite to sprite sheet
-		//tmp[_numSprites - 1] = new Sprite;
-		//tmp[_numSprites - 1] = sprite;
-		////m_sheet->push_back( new Sprite);
-		////m_sheet[0][0][_numSprites - 1] = sprite;
-		//m_sheet = tmp;
-
-		m_sheet->push_back(sprite);
-	}
-
+	void add(Sprite sprite) { m_sheet->push_back(new Sprite(sprite)); }
 	void add(std::vector<std::wstring>* sprite)
 	{
-		//Sprite
-		//	**tmp = new Sprite*[++_numSprites];
-		//	//**tmp2 = m_sheet;
-		//
-		////cpy data
-		//for(int a = 0; a < _numSprites - 1; a++)
-		//	tmp[a] = new Sprite,
-		//	*tmp[a] = *m_sheet[0][a],
-		//	delete m_sheet[0][a];
-		////delete[] tmp2;
-		//
-		////add sprite to sprite sheet
-		//tmp[_numSprites - 1] = new Sprite;
-		//tmp[_numSprites - 1]->create(sprite);
-		////m_sheet->push_back(new Sprite);
-		////m_sheet[0][0][_numSprites++]->create(sprite);
-		//m_sheet = tmp;
 		Sprite* tmp = new Sprite;
 		tmp->create(sprite);
 		m_sheet->push_back(tmp);
@@ -285,90 +334,155 @@ struct SpriteSheet
 
 	void remove(int index)
 	{
-		//delete m_sheet[0][index];
-		//_numSprites--;
+		delete m_sheet[0][index];
 		m_sheet->erase(m_sheet->begin() + index);
-
 	}
-
 	void remove(const char* tag)
 	{
-		for(unsigned a = 0; a < size(); a++)
+		for(int a = 0; a < size(); a++)
 			if(m_sheet[0][a]->getTag() == tag)
 			{
-
-				//delete m_sheet[0][a];
-				//break;
-				m_sheet->erase(m_sheet->begin() + a);
+				remove(a);
+				return;
 			}
-
-		//_numSprites--;
 	}
 
 	void clear()
 	{
-		//for(int a = 0; a < _numSprites; a++)
-		//	delete m_sheet[0][a];
-		//Sprite** tmp = m_sheet;
-		//delete[] tmp;
-
+		for(auto& a : *m_sheet)
+			delete a;
 		m_sheet->clear();
 	}
 
-	unsigned size()
+	int size()
 	{
-		return (unsigned)m_sheet->size();
+		return m_sheet->size();
 	}
 
 	Sprite& at(unsigned int index)
 	{
 		return operator[](index);
 	}
-
 	Sprite& at(const char* tag)
 	{
-		for(unsigned a = 0; a < size(); a++)
+		for(int a = 0; a < size(); a++)
 			if(m_sheet[0][a]->getTag() == tag)
 				return *m_sheet[0][a];
 		return *m_sheet[0][size()];
 	}
-
-	Sprite & operator[](unsigned int index)
+	Sprite& operator[](unsigned int index)
 	{
 		return *m_sheet[0][index];
 	}
-private:
+
+	std::vector<Sprite*>::iterator begin() { return m_sheet->begin(); }
+	std::vector<Sprite*>::iterator end() { return m_sheet->end(); }
+	std::vector<Sprite*>::reverse_iterator rbegin() { return m_sheet->rbegin(); }
+	std::vector<Sprite*>::reverse_iterator rend() { return m_sheet->rend(); }
+
+protected:
+	Coord2D<> m_pos;
+	int m_colour = FG_WHITE;
 	std::vector<Sprite*>* m_sheet = new std::vector<Sprite*>;
-	//unsigned short _numSprites = 0;
 };
 
-struct Animation
+struct Animation:public SpriteSheet
 {
-	void create(SpriteSheet& frames)
+	Animation():SpriteSheet() {}
+	Animation(const SpriteSheet& cpy):SpriteSheet(cpy) { setCurrentFrame(0); }
+
+	void update()
 	{
-		*m_sheet = frames;
+		float time = (float)clock() / CLOCKS_PER_SEC;
+		m_pos = at(m_currentFrame).getPosition();
+		m_colour = at(m_currentFrame).getColour();
+
+		if(!m_init)
+		{
+			m_lastTime = time;
+			m_init = true;
+		}
+
+		if(!m_pause && !m_stop)
+		{
+			if((time = (time - m_lastTime)) >= m_speed)
+			{
+				if(m_repeat)
+					m_currentFrame = int(time / m_speed) % size();
+				else
+				{
+					m_currentFrame = int(time / m_speed);
+					m_currentFrame = m_currentFrame >= size() - 1 ? unsigned((size() - 2) % size()) : m_currentFrame;
+				}
+			}
+		}
+		else
+		{
+			m_lastTime = time;
+
+			if(m_stop)
+				reset();
+		}
+		at(m_currentFrame).setPosition(m_pos);
+		at(m_currentFrame).setColour(m_colour);
 	}
 
-	Sprite animate(bool repeat = true)
+	Sprite& getSprite()
 	{
-		repeat;
+		return at(m_currentFrame);
+	}
+
+	void setRepeat(bool repeat)
+	{
+		m_repeat = repeat;
+	}
+
+	void setPause(bool pause)
+	{
+		m_pause = pause;
+	}
+
+	void setStop(bool stop)
+	{
+		m_stop = stop;
+	}
+
+	bool isRepeat()
+	{
+		return m_repeat;
+	}
+
+	bool isPaused()
+	{
+		return m_pause;
+	}
+
+	bool isStop()
+	{
+		return m_stop;
 	}
 
 	void reset()
-	{}
-
-	void setFPS(ushort fps)
 	{
-		fps;
+
+		m_currentFrame = 0;
+	}
+
+	void setSpeed(float fps)
+	{
+		m_speed = 1 / fps;
 	}
 
 	void setCurrentFrame(ushort frame)
 	{
+		if(!size())return;
 		m_currentFrame = frame;
 	}
+
 private:
-	SpriteSheet* m_sheet = new SpriteSheet;
-	ushort m_fps, m_currentFrame;
+	ushort  m_currentFrame = 0;
+	float m_speed = 0, m_lastTime = 0;
+	bool m_init = false, m_pause = false, m_stop = false, m_repeat = true;
 };
 
 struct MouseInput
@@ -407,10 +521,10 @@ struct MouseInput
 		GetNumberOfConsoleInputEvents(GetStdHandle(STD_INPUT_HANDLE), &numEvents);
 		if(numEvents)
 			ReadConsoleInputA(
-				GetStdHandle(STD_INPUT_HANDLE),      // input buffer handle 
-				irBuff,      // buffer to read into 
-				128,         // size of read buffer 
-				&numEvents);
+			GetStdHandle(STD_INPUT_HANDLE),      // input buffer handle 
+			irBuff,      // buffer to read into 
+			128,         // size of read buffer 
+			&numEvents);
 
 		for(UINT a = 0; a < numEvents; a++)
 		{
@@ -447,66 +561,70 @@ private:
 };
 
 
-
 /*Classes*/
 class EmConsole
 {
 public:
 	/***Constructers***/
-	EmConsole(std::string& title);
 
-	EmConsole(const char* title);
+	EmConsole() = delete;
 
-	EmConsole();
+	static void init();
 
-	void setFullScreen(bool);
+	static void setFullScreen(bool);
+	static bool getFullScreen();
 
 	/***Functions***/
 
 	//sends a text file to a vector of vector wstring 
-	void textFileToVector(std::string file, std::vector<std::vector<std::wstring>>& str);
+	static void textFileToVector(std::string file, std::vector<std::vector<std::wstring>>& str);
 
 	//sends a text file to a vector of vector wstring
-	std::vector<std::vector<std::wstring>> textFileToVector(std::string file);
+	static std::vector<std::vector<std::wstring>> textFileToVector(std::string file);
 
 	//sets the title
-	void setTitle(std::string title);
+	static void setTitle(std::string title);
 
 	//sets the console size
-	void setConsoleSize(int x, int y);
+	static void setConsoleSize(ushort x, ushort y);
 
 	//returns
-	COORD getConsoleSize();
+	static COORD getConsoleSize();
 
-	int getWidth();
+	static int getWidth();
 
-	int getHeight();
+	static int getHeight();
 
-	void printf(const char* ...);
+	void printf(const char*...);
 
 	//sets weather or not the window can be resized
-	void setResizable(bool resz);
+	static void setResizeable(bool resz);
+	static bool getResizeable();
 
 	//sets position of the console from the top left corner
-	void setConsolePosition(int x, int y);
+	static void setConsolePosition(int x, int y);
 
-	void placeConsoleCenter();
+	static void placeConsoleCenter();
 
-	void consoleCursorPosition(int x, int y);
+	static void consoleCursorPosition(int x, int y);
+
+
+#pragma region Console Reading
 
 	/* Start: special stuff for tetris (don't even try to understand)*/
-	std::vector<int> readConsoleLineAtributes(int x, int y, float width);
+	static std::vector<int> readConsoleLineAtributes(int x, int y, float width);
 
-	std::vector<std::vector<int>> readConsoleAreaAtributes(int x, int y, float width, float height);
+	static std::vector<std::vector<int>> readConsoleAreaAtributes(int x, int y, float width, float height);
 
-	std::vector<std::wstring> readConsoleArea(int x, int y, float width, float height);
+	static std::vector<std::wstring> readConsoleArea(int x, int y, float width, float height);
 
-	std::wstring readConsoleLine(int x, int y, float width);
+	static std::wstring readConsoleLine(int x, int y, float width);
 
-	char readConsoleCharacter(int x, int y);
+	static char readConsoleCharacter(int x, int y);
 
-	char readActiveConsoleCharacter(int x, int y);
+	static char readActiveConsoleCharacter(int x, int y);
 	/* End: special stuff for tetris (don't even try to understand)*/
+#pragma endregion
 
 	MouseInput mouseState()
 	{
@@ -516,19 +634,20 @@ public:
 	}
 
 
+#pragma region Console buffer overloads
 
 	/*Console buffer overloads*/
 
 	/*
-	Note: NS means No Spaces, wrighting only characters excluding spaces.
-	Extrymely inefficient
+	Note: NS means No Spaces, writing only characters excluding spaces.
+	Extremely inefficient
 	*/
 
 	/*
 	toConsoleBuffer(wstring &str, float poX, float poY, int x, int y, Colour colour);
 	* str    - wstring to be drawn to buffer
-	* poX    - the x coord of origin position of the console (where you consoder (0,0) to be)
-	* poY    - the y coord of origin position of the console (where you consoder (0,0) to be)
+	* poX    - the x coord of origin position of the console (where you consider (0,0) to be)
+	* poY    - the y coord of origin position of the console (where you consider (0,0) to be)
 	* x      - x position from the origin poX coordinate on the screen
 	* y      - y position from the origin poY coordinate on the screen
 	* colour - colour of text
@@ -539,7 +658,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(std::wstring& str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBufferNS(std::wstring& str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(wstring &str, float poX, float poY, int x, int y);
@@ -554,7 +673,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(std::wstring& str, float& poX, float& poY, int x, int y);
+	static void toConsoleBufferNS(std::wstring& str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(wstring &str, int x, int y, int colour);
@@ -569,7 +688,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(std::wstring& str, int x, int y, int colour);
+	static void toConsoleBufferNS(std::wstring& str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(wstring &str, int x, int y);
@@ -582,7 +701,7 @@ public:
 	specified (x,y) position from the top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(std::wstring& str, int x, int y);
+	static void toConsoleBufferNS(std::wstring& str, int x, int y);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, float poX, float poY, int x, int y, int colour);
@@ -598,7 +717,7 @@ public:
 	specified (x,y) position from the specified origin (poX, poY)
 	to be drawn after drawConsole(); is called (with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(Sprite& str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBufferNS(Sprite& str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, float poX, float poY, int x, int y);
@@ -613,7 +732,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(Sprite& str, float& poX, float& poY, int x, int y);
+	static void toConsoleBufferNS(Sprite& str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, int x, int y, int colour);
@@ -628,7 +747,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(Sprite& str, int x, int y, int colour);
+	static void toConsoleBufferNS(Sprite& str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, int x, int y);
@@ -641,7 +760,7 @@ public:
 	specified (x,y) position from the top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(Sprite& str, int x, int y);
+	static void toConsoleBufferNS(Sprite& str, int x, int y);
 
 	/*
 	toConsoleBuffer(const char* str, float poX, float poY, int x, int y, int colour);
@@ -658,7 +777,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(const wchar_t* str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBufferNS(const wchar_t* str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(const wchar_t* str, float poX, float poY, int x, int y);
@@ -673,7 +792,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(const wchar_t* str, float& poX, float& poY, int x, int y);
+	static void toConsoleBufferNS(const wchar_t* str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(const wchar_t *str, int x, int y, int colour);
@@ -688,7 +807,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBufferNS(const wchar_t* str, int x, int y, int colour);
+	static void toConsoleBufferNS(const wchar_t* str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(const wchar_t *str, int x, int y);
@@ -701,7 +820,7 @@ public:
 	specified (x,y) position from the specified top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBufferNS(const wchar_t* str, int x, int y);
+	static void toConsoleBufferNS(const wchar_t* str, int x, int y);
 
 	/*
 	toConsoleBuffer(wstring &str, float poX, float poY, int x, int y, int colour);
@@ -718,7 +837,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y, std::vector<int>& colour);
+	static void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y, std::vector<int>& colour);
 
 	/*
 	toConsoleBuffer(wstring &str, float poX, float poY, int x, int y, int colour);
@@ -735,7 +854,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(wstring &str, float poX, float poY, int x, int y);
@@ -750,7 +869,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y);
+	static void toConsoleBuffer(std::wstring& str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(wstring &str, int x, int y, int colour);
@@ -765,7 +884,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(std::wstring& str, int x, int y, int colour);
+	static void toConsoleBuffer(std::wstring& str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(wstring &str, int x, int y);
@@ -778,7 +897,7 @@ public:
 	specified (x,y) position from the top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(std::wstring& str, int x, int y);
+	static void toConsoleBuffer(std::wstring& str, int x, int y);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, float poX, float poY, int x, int y, std::vector<std::vector<int>> &colour);
@@ -794,7 +913,7 @@ public:
 	specified (x,y) position from the specified origin (poX, poY)
 	to be drawn after drawConsole(); is called (with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(Sprite& str, int x, int y, std::vector<std::vector<int>>& colour);
+	static void toConsoleBuffer(Sprite& str, int x, int y, std::vector<std::vector<int>>& colour);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, float poX, float poY, int x, int y, int colour);
@@ -810,7 +929,7 @@ public:
 	specified (x,y) position from the specified origin (poX, poY)
 	to be drawn after drawConsole(); is called (with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, float poX, float poY, int x, int y);
@@ -825,7 +944,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int y);
+	static void toConsoleBuffer(Sprite& str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, int x, int y, int colour);
@@ -840,7 +959,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(Sprite& str, int x, int y, int colour);
+	static void toConsoleBuffer(Sprite& str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(vector<wstring>& str, int x, int y);
@@ -853,7 +972,33 @@ public:
 	specified (x,y) position from the top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(Sprite& str, int x, int y);
+	static void toConsoleBuffer(Sprite& str, int x, int y);
+
+	/*
+		toConsoleBuffer(vector<wstring>& str, int x, int y);
+		* str    - vector of wstring to be drawn to buffer
+		* x      - x position from the top left corner of the screen
+		* y      - y position from the top left corner of the screen
+
+		summary:
+		Adds multiple lines to the console starting at the
+		specified (x,y) position from the top left corner
+		to be drawn after drawConsole(); is called
+		*/
+	static void toConsoleBuffer(Sprite& str);
+
+	/*
+			toConsoleBuffer(vector<wstring>& str, int x, int y);
+			* str    - vector of wstring to be drawn to buffer
+			* x      - x position from the top left corner of the screen
+			* y      - y position from the top left corner of the screen
+
+			summary:
+			Adds multiple lines to the console starting at the
+			specified (x,y) position from the top left corner
+			to be drawn after drawConsole(); is called
+			*/
+	static void toConsoleBuffer(Sprite& str, int colour);
 
 	/*
 	toConsoleBuffer(const wchar_t* str, float poX, float poY, int x, int y, int colour);
@@ -870,7 +1015,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int x, int y, int colour);
+	static void toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(const wchar_t* str, float poX, float poY, int x, int y);
@@ -885,7 +1030,7 @@ public:
 	specified (x,y) position from the origin (poX, poY)
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int x, int y);
+	static void toConsoleBuffer(const wchar_t* str, float& poX, float& poY, int x, int y);
 
 	/*
 	toConsoleBuffer(const wchar_t *str, int x, int y, int colour);
@@ -900,7 +1045,7 @@ public:
 	to be drawn after drawConsole(); is called
 	(with text colour modification [see: enum colour in EmConsole.h])
 	*/
-	void toConsoleBuffer(const wchar_t* str, int x, int y, int colour);
+	static void toConsoleBuffer(const wchar_t* str, int x, int y, int colour);
 
 	/*
 	toConsoleBuffer(const wchar_t *str, int x, int y);
@@ -913,7 +1058,8 @@ public:
 	specified (x,y) position from the specified top left corner
 	to be drawn after drawConsole(); is called
 	*/
-	void toConsoleBuffer(const wchar_t* str, int x, int y);
+	static void toConsoleBuffer(const wchar_t* str, int x, int y);
+#pragma endregion
 
 	/*
 	drawConsole(bool clear = true);
@@ -924,23 +1070,11 @@ public:
 	*Note:
 	Default is true
 	*/
-	void drawConsole(bool clear = true);
+	static void drawConsole(bool clear = true);
 
 	//clears the console
-	void clearConsole();
+	static void clearConsole();
 
 private:
-	/**Variables**/
-
-	CHAR_INFO* _ci;
-	CHAR_INFO** _ci2;
-	DWORD oldInputMode, newInputMode;
-
-	COORD _cursorPosition;
-	HANDLE _con[2], _input;
-	INPUT_RECORD _inputRecord[128];
-	COORD _sz = {0,0};
-	UINT _conWidth, _conHeight;
-	bool _buff = 0, _resizable, _full = 0;
 
 };
