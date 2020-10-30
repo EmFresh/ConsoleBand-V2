@@ -86,7 +86,7 @@ const char* KeyInput::type()
 					} else
 					{
 						wait2 = amount;
-						return (typing += a + 32).c_str();
+						return (typing += char(a + 32)).c_str();
 					}
 			}
 			//OEM (dual use buttons)		

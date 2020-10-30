@@ -22,7 +22,8 @@ private:
 		symbalKeys {';','/','`','[','\\',']','\'','=',',','-','.'},
 		symbalShiftKeys {':','?','~','{','|','}','\"','+','<','_','>'},
 		operators {'*','+','-','.','/'};
-	short count, count2, wait, wait2, pressed, length = -1;
+	short count, count2, wait, wait2, pressed;
+	int length = -1;
 	bool typed;
 	std::string typing;
 

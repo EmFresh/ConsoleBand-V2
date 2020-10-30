@@ -95,6 +95,7 @@ struct Sprite
 	*/
 	virtual void create(const char* file, char* tag = nullptr)
 	{
+		file;
 		setTag(tag);
 
 		m_sprite.clear();
@@ -102,30 +103,32 @@ struct Sprite
 		m_height = m_width = 0;
 
 	#pragma region C-style
-		//FILE* f;
-		//fopen_s(&f, file, "r, ccs=UNICODE");
-		//wchar_t* str = new wchar_t[255];
-		//
-		//	while(str = fgetws(str, 255, f),
-		//		  m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
-		//		m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
-		//		m_height++;
-		//
-		//	m_sprite.pop_back();
-		//	if(f)
-		//		fclose(f);
-		//delete[] str;
+		FILE* f;
+		fopen_s(&f, file, "r, ccs=UNICODE");
+		wchar_t* str = new wchar_t[255];
+		
+			while(str = fgetws(str, 255, f),
+				  m_sprite.push_back((str == nullptr ? L"" : (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str))), str != nullptr)
+				m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
+				m_height++;
+		
+			m_sprite.pop_back();
+			if(f)
+				fclose(f);
+		delete[] str;
 	#pragma endregion
 
 	#pragma region modern
 
-		std::wfstream unicodeFile(file, std::ios::in);
-		std::wstring line;
-
-		for(int a = 0; getline(unicodeFile, line); a++)
-			m_sprite.push_back(line);
-
-		unicodeFile.close();
+	//	std::wfstream unicodeFile(file, std::ios::in);
+	//	std::wstring line;
+	//
+	//	while(getline(unicodeFile, line))
+	//		m_sprite.push_back(line),
+	//		(m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width),
+	//		(++m_height);
+	//
+	//	unicodeFile.close();
 
 	#pragma endregion
 
@@ -154,7 +157,7 @@ struct Sprite
 		 **
 
 	*/
-	bool boxCollision(Sprite s2, Coord2D<> p1, Coord2D<> p2)
+	bool boxCollision(Sprite s2, util::Coord2D<> p1, util::Coord2D<> p2)
 	{
 		p1 = {p1.x + short(m_width * .5f) ,p1.y + short(m_height * .5f)};
 		p2 = {p2.x + short(s2.m_width * .5f), p2.y + short(s2.m_height * .5f)};
@@ -167,12 +170,12 @@ struct Sprite
 
 	bool boxCollision(Sprite s2)
 	{
-		Coord2D<> p1 = {m_pos.x  ,m_pos.y};
-		Coord2D<> p2 = {s2.m_pos.x  ,s2.m_pos.y};
+		util::Coord2D<> p1 = {m_pos.x  ,m_pos.y};
+		util::Coord2D<> p2 = {s2.m_pos.x  ,s2.m_pos.y};
 		return boxCollision(s2, p1, p2);
 	}
 
-	bool mouseCollision(Coord2D<> p1, Coord2D<> mouse)
+	bool mouseCollision(util::Coord2D<> p1, util::Coord2D<> mouse)
 	{
 		p1 = {p1.x + short(m_width * .5f), p1.y + short(m_height * .5f)};
 
@@ -181,9 +184,9 @@ struct Sprite
 				return true;
 		return false;
 	}
-	bool mouseCollision(Coord2D<> mouse)
+	bool mouseCollision(util::Coord2D<> mouse)
 	{
-		Coord2D<> p1 = {m_pos.x + m_width, m_pos.y + m_height};
+		util::Coord2D<> p1 = {m_pos.x + m_width, m_pos.y + m_height};
 
 		return mouseCollision(p1, mouse);
 	}
@@ -202,7 +205,7 @@ struct Sprite
 	{
 		m_colour = colour;
 	}
-	void setPosition(Coord2D<> pos) { m_pos = pos; }
+	void setPosition(util::Coord2D<> pos) { m_pos = pos; }
 	void setX(float posx) { m_pos.x = posx; }
 	void setY(float posy) { m_pos.y = posy; }
 
@@ -224,8 +227,8 @@ struct Sprite
 		return m_height;
 	}
 
-	Coord2D<> getPosition() { return m_pos; }
-	Coord2D<> getCenter() { return m_pos + Coord2D<>{(float)m_width, (float)m_height} *.5f; }
+	util::Coord2D<> getPosition() { return m_pos; }
+	util::Coord2D<> getCenter() { return m_pos + util::Coord2D<>{(float)m_width, (float)m_height} *.5f; }
 
 	float getX() { return m_pos.x; }
 	float getY() { return m_pos.y; }
@@ -241,7 +244,7 @@ struct Sprite
 
 protected:
 	std::vector<std::wstring> m_sprite;
-	Coord2D<> m_pos{0,0};
+	util::Coord2D<> m_pos{0,0};
 	const char* m_tag = nullptr;
 	ushort m_width = 0, m_height = 0;
 	int m_colour = FG_WHITE;
@@ -281,46 +284,70 @@ struct SpriteSheet
 	*/
 	void create(const char* file, const wchar_t* split = L"")
 	{
-		FILE* f;
-
-		wchar_t* str2 = new wchar_t[255];
-
 		std::vector<std::wstring> sprite;
-		unsigned short width = 0, height = 0;
+		uint height=0;
 		bool seg = 0;
 		std::wstring str;
 
-		fopen_s(&f, file, "r, ccs=UNICODE");
+	#pragma region C-style
+		//FILE* f;
+		//wchar_t* str2 = new wchar_t[255];
+		//fopen_s(&f, file, "r, ccs=UNICODE");
+		//
+		//while(str2 = fgetws(str2, 255, f),
+		//	  str = (str2 == nullptr ? L"" :
+		//	  (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
+		//	  str2 != nullptr)
+		//{
+		//	if(str == split)
+		//	{
+		//		if(!seg)
+		//		{
+		//			add(&sprite);
+		//
+		//			height = 0;
+		//			sprite.clear();
+		//		}
+		//		seg = true;
+		//		continue;
+		//	}
+		//
+		//	++height;
+		//	seg = false;
+		//	sprite.push_back(str);
+		//}
+		//fclose(f);
+		//delete[] str2;
+	#pragma endregion
 
-		while(str2 = fgetws(str2, 255, f),
-			  str = (str2 == nullptr ? L"" :
-			  (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
-			  str2 != nullptr)
+
+	#pragma region Modern
+		std::wfstream unicode(file, std::ios::in);
+
+		while(getline(unicode, str))
 		{
 			if(str == split)
 			{
 				if(!seg)
 				{
 					add(&sprite);
-
-					width = 0, height = 0;
+					height = 0;
 					sprite.clear();
 				}
 				seg = true;
 				continue;
 			}
 
-			width = width < (ushort)str.size() ? (ushort)str.size() : width;
-			sprite.push_back(str);
-			height++;
+			++height;
 			seg = false;
+			sprite.push_back(str);
 		}
-		fclose(f);
+		unicode.close();
+	#pragma endregion
 
 		if(height > 0)
 			add(&sprite);
 
-		delete[] str2;
 	}
 
 	void add(Sprite sprite) { m_sheet->push_back(new Sprite(sprite)); }
@@ -339,7 +366,7 @@ struct SpriteSheet
 	}
 	void remove(const char* tag)
 	{
-		for(int a = 0; a < size(); a++)
+		for(uint a = 0; a < size(); a++)
 			if(m_sheet[0][a]->getTag() == tag)
 			{
 				remove(a);
@@ -354,7 +381,7 @@ struct SpriteSheet
 		m_sheet->clear();
 	}
 
-	int size()
+	uint size()
 	{
 		return m_sheet->size();
 	}
@@ -365,7 +392,7 @@ struct SpriteSheet
 	}
 	Sprite& at(const char* tag)
 	{
-		for(int a = 0; a < size(); a++)
+		for(uint a = 0; a < size(); a++)
 			if(m_sheet[0][a]->getTag() == tag)
 				return *m_sheet[0][a];
 		return *m_sheet[0][size()];
@@ -381,7 +408,7 @@ struct SpriteSheet
 	std::vector<Sprite*>::reverse_iterator rend() { return m_sheet->rend(); }
 
 protected:
-	Coord2D<> m_pos;
+	util::Coord2D<> m_pos;
 	int m_colour = FG_WHITE;
 	std::vector<Sprite*>* m_sheet = new std::vector<Sprite*>;
 };
@@ -408,11 +435,11 @@ struct Animation:public SpriteSheet
 			if((time = (time - m_lastTime)) >= m_speed)
 			{
 				if(m_repeat)
-					m_currentFrame = int(time / m_speed) % size();
+					m_currentFrame = ushort(time / m_speed) % size();
 				else
 				{
-					m_currentFrame = int(time / m_speed);
-					m_currentFrame = m_currentFrame >= size() - 1 ? unsigned((size() - 2) % size()) : m_currentFrame;
+					m_currentFrame = ushort(time / m_speed);
+					m_currentFrame = m_currentFrame >= size() - 1 ? ushort((size() - 2) % size()) : m_currentFrame;
 				}
 			}
 		}
@@ -489,8 +516,8 @@ struct MouseInput
 {
 
 	static bool doubleClick;
-	static short vertWheel, horiWheel;
-	static COORD position;
+	static int vertWheel, horiWheel;
+	static util::Coord2D<short> position;
 
 	static bool pressed(MouseButtons button)
 	{
@@ -504,10 +531,10 @@ struct MouseInput
 
 	static bool stroke(MouseButtons button)
 	{
-		if(GetAsyncKeyState(button))
-			buttons[button] = true;
-		if(!GetAsyncKeyState(button) && buttons[button])
-			return (buttons[button] = false, true);
+		if(GetAsyncKeyState((short)button))
+			buttons[(short)button] = true;
+		if(!GetAsyncKeyState((short)button) && buttons[(short)button])
+			return (buttons[(short)button] = false, true);
 
 		return false;
 	}
@@ -570,6 +597,7 @@ public:
 	EmConsole() = delete;
 
 	static void init();
+	static void init(std::string title);
 
 	static void setFullScreen(bool);
 	static bool getFullScreen();
@@ -586,7 +614,7 @@ public:
 	static void setTitle(std::string title);
 
 	//sets the console size
-	static void setConsoleSize(ushort x, ushort y);
+	static void setConsoleSize(short x, short y);
 
 	//returns
 	static COORD getConsoleSize();

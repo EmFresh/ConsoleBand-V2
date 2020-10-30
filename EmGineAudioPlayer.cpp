@@ -270,9 +270,9 @@ void EmGineAudioPlayer::printError(FMOD_RESULT error, const char* where)
 	where;
 	if(error)
 	{
+		std::string str(FMOD_ErrorString(error));
 #if _DEBUG
-		//std::string str(FMOD_ErrorString(error));
-		//OutputDebugStringA(("Error:\n" + str + '\n' + where + "\n\n").c_str());
+		OutputDebugStringA(("Error:\n" + str + '\n' + where + "\n\n").c_str());
 #endif
 	}
 }

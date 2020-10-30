@@ -17,7 +17,7 @@ using std::pair;
 using std::function;
 using std::thread;
 using std::stoi;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 #pragma endregion
 
 #pragma region Deffines
@@ -70,9 +70,6 @@ struct InstrumentInfo
 	int player;
 };
 
-
-EmConsole* con = new EmConsole("RockBand in Console");
-
 SpriteSheet* track = new SpriteSheet, * notes = new SpriteSheet, * logo = new SpriteSheet;
 Sprite* box = new Sprite, * pauseMenu = new Sprite;
 
@@ -88,7 +85,7 @@ vector<ushort>
 {FG_GREEN | FG_INTENSIFY,FG_RED | FG_INTENSIFY,
 FG_YELLOW | FG_INTENSIFY,FG_BLUE | FG_INTENSIFY,FG_PURPLE | FG_INTENSIFY},
 
-*padNoteColour = new vector<ushort>
+* padNoteColour = new vector<ushort>
 {FG_PURPLE | FG_INTENSIFY,FG_RED | FG_INTENSIFY,FG_YELLOW | FG_INTENSIFY,
 FG_BLUE | FG_INTENSIFY,FG_GREEN | FG_INTENSIFY};
 
@@ -215,13 +212,13 @@ void openSong(string songFile)
 						if(file[a][b].size() <= 3)
 							continue;
 						if((file[a][b][3] != '+' && []()->uint
-							{
-								unsigned b = 0; for(auto& a : lyrics[0].back())b += a.size(); return b;
-							}() + wstring(file[a][b].begin() + 3, file[a][b].end()).size() + 2 < (uint)lyricBox.getWidth() - 1) &&
-							(timeInSec - lyricTiming[0].back().back().second < (uint)750))
+						{
+							unsigned b = 0; for(auto& a : lyrics[0].back())b += a.size(); return b;
+						}() + wstring(file[a][b].begin() + 3, file[a][b].end()).size() + 2 < (uint)lyricBox.getWidth() - 1) &&
+						   (timeInSec - lyricTiming[0].back().back().second < (uint)750))
 
 							lyrics[0].back().push_back(L" " + wstring(file[a][b].begin() + 3, file[a][b].end())),
-								lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
+							lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
 						else
 						{
 							lyrics->push_back(vector<wstring>());
@@ -311,13 +308,13 @@ void openSong(string songFile)
 						if(file[a][b].size() <= 3)
 							continue;
 						if((file[a][b][3] != '+' && []()->uint
-							{
-								unsigned b = 0; for(auto& a : lyrics[0].back())b += a.size(); return b;
-							}() + wstring(file[a][b].begin() + 3, file[a][b].end()).size() + 2 < (uint)lyricBox.getWidth() - 1) &&
-							(timeInSec - lyricTiming[0].back().back().second < (uint)750))
+						{
+							unsigned b = 0; for(auto& a : lyrics[0].back())b += a.size(); return b;
+						}() + wstring(file[a][b].begin() + 3, file[a][b].end()).size() + 2 < (uint)lyricBox.getWidth() - 1) &&
+						   (timeInSec - lyricTiming[0].back().back().second < (uint)750))
 
 							lyrics[0].back().push_back(L" " + wstring(file[a][b].begin() + 3, file[a][b].end())),
-								lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
+							lyricTiming[0].back().push_back({file.getTimeInSeconds(a, b) * 1000, file.getTimeInSeconds(a, b) * 1000});
 						else
 						{
 							lyrics->push_back(vector<wstring>());
@@ -501,7 +498,7 @@ void openSong(string songFile)
 			lyricTiming->erase(lyricTiming->begin() + a),
 			a--;
 
-		if(a>0)//create blank spaces in long pauses
+		if(a > 0)//create blank spaces in long pauses
 		{
 			if(a < (int)lyrics->size())
 				if(!lyrics[0][a].size())
@@ -580,7 +577,7 @@ void percent()
 	*percentstr = wstring(tmp.begin(), tmp.end());
 }
 
-float notesInSong(vector<vector<vector<pair<long, long>>>> * song)
+float notesInSong(vector<vector<vector<pair<long, long>>>>* song)
 {
 	float count(0);
 	for(auto& a : *song)
@@ -615,7 +612,7 @@ void missFX(int index, int seed)
 #pragma endregion
 
 #pragma region Note Alterations
-long myMax(vector<vector<vector<pair<long, long>>>> * a_max)
+long myMax(vector<vector<vector<pair<long, long>>>>* a_max)
 {
 	auto maxi = a_max[0][0].size();
 	for(int a = 1; a < (int)a_max->size(); a++)
@@ -638,7 +635,7 @@ bool collision(int index)
 			if(trackInfo[0][index].instrument == "guitar")
 			{
 				while(colliCountGuitar[a] < (*theTrackTmps)[index][a].size() &&
-					(*theTrackTmps)[index][a][colliCountGuitar[a]].first + noteOffset > fretboardPosition + 3)
+					  (*theTrackTmps)[index][a][colliCountGuitar[a]].first + noteOffset > fretboardPosition + 3)
 					colliCountGuitar[a]++;
 
 				if(pressed[index][a])
@@ -650,7 +647,7 @@ bool collision(int index)
 			if(trackInfo[0][index].instrument == "rhythm")
 			{
 				while(colliCountBass[a] < (*theTrackTmps)[index][a].size() &&
-					(*theTrackTmps)[index][a][colliCountBass[a]].first + noteOffset > fretboardPosition + 3)
+					  (*theTrackTmps)[index][a][colliCountBass[a]].first + noteOffset > fretboardPosition + 3)
 					colliCountBass[a]++;
 
 				if(pressed[index][a])
@@ -662,7 +659,7 @@ bool collision(int index)
 			if(trackInfo[0][index].instrument == "drum")
 			{
 				while(colliCountDrum[a] < (*theTrackTmps)[index][a].size() &&
-					(*theTrackTmps)[index][a][colliCountDrum[a]].first + noteOffset > fretboardPosition + 3)
+					  (*theTrackTmps)[index][a][colliCountDrum[a]].first + noteOffset > fretboardPosition + 3)
 					colliCountDrum[a]++;
 
 				if(colliCountDrum[a] < (*theTrackTmps)[index][a].size())
@@ -686,10 +683,10 @@ bool noteDelete(int index)
 		for(uint a = 0; a < theTrackTmps[0][index].size(); a++)
 			if(colliCountGuitar[a] < (*theTrackTmps)[index][a].size())
 				if((*theTrackTmps)[index][a][colliCountGuitar[a]].first + noteOffset > fretboardPosition - 3 &&
-					(*theTrackTmps)[index][a][colliCountGuitar[a]].first + noteOffset <= fretboardPosition + 3)
+				   (*theTrackTmps)[index][a][colliCountGuitar[a]].first + noteOffset <= fretboardPosition + 3)
 					num.push_back(a);
 
-		short lastOne = 0;
+		uint lastOne = 0;
 		bool init = true;
 		for(uint a = 0; a < num.size(); a++)
 		{
@@ -755,14 +752,14 @@ bool noteDelete(int index)
 				if((*theTrackTmps)[index][a][colliCountBass[a]].first + noteOffset > fretboardPosition - 3 && (*theTrackTmps)[index][a][colliCountBass[a]].first + noteOffset <= fretboardPosition + 3)
 					num.push_back(a);
 
-		short lastOne = 0;
+		ushort lastOne = 0;
 		bool init = true;
 		for(uint a = 0; a < num.size(); a++)
 		{
 			if(init)
 			{
 				init = false;
-				lastOne = a;
+				lastOne = (ushort)a;
 				continue;
 			}
 
@@ -858,11 +855,11 @@ void drawLines()
 		for(uint a = 0; a < lines->size(); a++)
 			if(incriment > 0)
 				if(!((a + (barCount)) % barNum))
-					con->toConsoleBuffer(trackInfo[0][b].instrument == "drum" ? L"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" : L"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", centerTrack + 1 + count, ((*lines)[a] + incriment / noteSpeed),
-						FG_WHITE | FG_INTENSIFY);
+					EmConsole::toConsoleBuffer(trackInfo[0][b].instrument == "drum" ? L"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" : L"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", centerTrack + 1 + count, ((*lines)[a] + incriment / noteSpeed),
+											   FG_WHITE | FG_INTENSIFY);
 				else
-					con->toConsoleBuffer(trackInfo[0][b].instrument == "drum" ? L"───────────────────────────────────────────────────" : L"────────────────────────────────────────────────────────────────", centerTrack + 1 + count, ((*lines)[a] + incriment / noteSpeed),
-						FG_WHITE);
+					EmConsole::toConsoleBuffer(trackInfo[0][b].instrument == "drum" ? L"───────────────────────────────────────────────────" : L"────────────────────────────────────────────────────────────────", centerTrack + 1 + count, ((*lines)[a] + incriment / noteSpeed),
+											   FG_WHITE);
 		count += (*track)[trackInfo[0][b].instrument == "guitar" || trackInfo[0][b].instrument == "rhythm" ? 0 : 1].getWidth();
 
 	}
@@ -890,7 +887,7 @@ void drawLines()
 		}
 
 		//delete old bar lines
-		while(((*lines)[0] + incriment / noteSpeed) > con->getHeight())
+		while(((*lines)[0] + incriment / noteSpeed) > EmConsole::getHeight())
 		{
 			lines->erase(lines->begin());
 			(barCount)++;
@@ -954,101 +951,101 @@ void playPauseMenu()
 	paused = true;
 
 	if((selector() ||
-		(MouseInput::stroke(LEFT_CLICK) && [&]()->bool
-			{
-				short tmp = (short)ceil(con->getHeight() / 4.5f);
-				int a = selection;
-				if(Sprite({L"",options[a],L""}).mouseCollision({short(con->getWidth() / 2 - ((options[a]).size() / 2)), short(tmp + a * 2)}, MouseInput::position))
-					return true;
+	   (MouseInput::stroke(LEFT_CLICK) && [&]()->bool
+	{
+		short tmp = (short)ceil(EmConsole::getHeight() / 4.5f);
+		int a = selection;
+		if(Sprite({L"",options[a],L""}).mouseCollision({float(EmConsole::getWidth() / 2 - ((options[a]).size() / 2)), float(tmp + a * 2)}, MouseInput::position))
+			return true;
 
-				return false;
-			}()) ||
-		guitarstart()) || (deselect() && selected))
+		return false;
+	}()) ||
+	   guitarstart()) || (deselect() && selected))
 		selected = !selected,
-				std::swap(colours[1], colours[2]);
+		std::swap(colours[1], colours[2]);
 
-			if(!selected)
-			{
-				if(goup())
-					selection > 0 ? selection-- : selection = optAmount - 1;
-				else if(godown())
-					selection + 1 < optAmount ? selection++ : selection = 0;
+	if(!selected)
+	{
+		if(goup())
+			selection > 0 ? selection-- : selection = optAmount - 1;
+		else if(godown())
+			selection + 1 < optAmount ? selection++ : selection = 0;
 
-				for(uint a = 0; a < optAmount; a++)
-				{
-					short tmp2 = (short)ceil(con->getHeight() / 4.5f);
+		for(uint a = 0; a < optAmount; a++)
+		{
+			short tmp2 = (short)ceil(EmConsole::getHeight() / 4.5f);
 
-					if(Sprite({options[a]}).mouseCollision({short(con->getWidth() / 2 - options[a].size() / 2), short(tmp2 + a * 2)}, MouseInput::position))
-						selection = a;
-				}
-			}
+			if(Sprite({options[a]}).mouseCollision({float(EmConsole::getWidth() / 2 - options[a].size() / 2), float(tmp2 + a * 2)}, MouseInput::position))
+				selection = a;
+		}
+	}
 
-			if(selected)
-				switch(selection)
-				{
-				case 0://Resume
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					//AudioPlayer::setPosition(AudioPlayer::getPosition(0) - 1000);
-					AudioPlayer::playAll();
-					paused = false;
-					return;
-				case 1://Restart
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					reset();
-					AudioPlayer::playAll();
-					paused = false;
-					return;
-				case 2://speed
-					bool newSpeed;
-					newSpeed = godown();
-					if((newSpeed) || goup())
-						if(((spacingScale * 2)* (speedPercent + (newSpeed ? .25 : -.25))) > 0 && ((float)(*notes)[0].getHeight() /
-							((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) -
-							((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) - spacingScale * 2) * 2))) > 0)
+	if(selected)
+		switch(selection)
+		{
+		case 0://Resume
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			//AudioPlayer::setPosition(AudioPlayer::getPosition(0) - 1000);
+			AudioPlayer::playAll();
+			paused = false;
+			return;
+		case 1://Restart
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			reset();
+			AudioPlayer::playAll();
+			paused = false;
+			return;
+		case 2://speed
+			bool newSpeed;
+			newSpeed = godown();
+			if((newSpeed) || goup())
+				if(((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25))) > 0 && ((float)(*notes)[0].getHeight() /
+				   ((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) -
+				   ((spacingScale * 2) * (speedPercent + (newSpeed ? .25 : -.25)) - spacingScale * 2) * 2))) > 0)
 
-							noteSpeed = spacingScale * 2,
-							noteSpeed = int(noteSpeed * (speedPercent += (newSpeed ? .25f : -.25f)));
+					noteSpeed = spacingScale * 2,
+					noteSpeed = int(noteSpeed * (speedPercent += (newSpeed ? .25f : -.25f)));
 
-					wchar_t percent[10];
-					swprintf_s(percent, speedPercent != 1 ? L": %.2f%%" : L": normal", abs(2 - speedPercent));
-					options[2] += percent;
-					break;
-				case 3://change difficulty
-					con->clearConsole();
-					difficultyMenu();
-					openSong(songDir);
-					reset();
-					selected = !selected;
-					paused = false;
-					break;
-				case 4://song select()
-					con->clearConsole();
-					exitSelect = !createdSongList();
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					reset();
-					AudioPlayer::playAll();
-					paused = false;
-					return;
-				case 5://start menu
-					selected = !selected;
-					selection = 0;
-					std::swap(colours[1], colours[2]);
-					paused = false;
-					exitSelect = true;
+			wchar_t percent[10];
+			swprintf_s(percent, speedPercent != 1 ? L": %.2f%%" : L": normal", abs(2 - speedPercent));
+			options[2] += percent;
+			break;
+		case 3://change difficulty
+			EmConsole::clearConsole();
+			difficultyMenu();
+			openSong(songDir);
+			reset();
+			selected = !selected;
+			paused = false;
+			break;
+		case 4://song select()
+			EmConsole::clearConsole();
+			exitSelect = !createdSongList();
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			reset();
+			AudioPlayer::playAll();
+			paused = false;
+			return;
+		case 5://start menu
+			selected = !selected;
+			selection = 0;
+			std::swap(colours[1], colours[2]);
+			paused = false;
+			exitSelect = true;
 
-					break;
-				}
+			break;
+		}
 
-			con->toConsoleBuffer(*pauseMenu, con->getWidth() / 2 - (*pauseMenu).getWidth() / 2, con->getHeight() / 3 - (*pauseMenu).getHeight() / 2);
+	EmConsole::toConsoleBuffer(*pauseMenu, EmConsole::getWidth() / 2 - (*pauseMenu).getWidth() / 2, EmConsole::getHeight() / 3 - (*pauseMenu).getHeight() / 2);
 
-			for(uint a = 0; a < optAmount; a++)
-				con->toConsoleBuffer(options[a], int(con->getWidth() / 2 - ((options[a]).size() / 2)), int(ceil(con->getHeight() / 4.5f) + a * 2), colours[selection == a]);
+	for(uint a = 0; a < optAmount; a++)
+		EmConsole::toConsoleBuffer(options[a], int(EmConsole::getWidth() / 2 - ((options[a]).size() / 2)), int(ceil(EmConsole::getHeight() / 4.5f) + a * 2), colours[selection == a]);
 
 
 }
@@ -1075,7 +1072,7 @@ void playSongMovement()
 					if(b > countAmountBass[a])
 					{
 						//note drop off
-						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > con->getHeight())
+						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > EmConsole::getHeight())
 							countAmountBass[a]++;
 
 						if(((*theTrackTmps)[c][a][b - 1].first >= (abs((*theTrackTmps)[c][a][b].first) - abs((*theTrackTmps)[c][a][b - 1].first))))//if the note below is off screen? (actually idk)
@@ -1085,21 +1082,21 @@ void playSongMovement()
 
 					}
 					if(!invisable(c, a, b))
-						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < con->getHeight())
+						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < EmConsole::getHeight())
 						{
 
 							if((*theTrackTmps)[c][a][b].first + noteOffset < fretboardPosition + notes[0][0].getHeight())//draw notes above the fret board
 							{
 								///Normal
-								con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, (*fretNoteColour)[a]);
+								EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, (*fretNoteColour)[a]);
 
 								///Collision Test
-								//con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
+								//EmConsole::toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
 								//					 b != colliCount[a] ? (*noteColour)[a] : FG_INTENSIFY | FG_WHITE);
 
 							}
 							else//draw notes below the fret board
-								con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, FG_RED);
+								EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, FG_RED);
 
 						}
 				}
@@ -1120,7 +1117,7 @@ void playSongMovement()
 					if(b > countAmountBass[a])
 					{
 						//note drop off
-						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > con->getHeight())
+						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > EmConsole::getHeight())
 							countAmountBass[a]++;
 
 						if(((*theTrackTmps)[c][a][b - 1].first >= (abs((*theTrackTmps)[c][a][b].first) - abs((*theTrackTmps)[c][a][b - 1].first))))//if the note below is off screen? (actually idk)
@@ -1130,19 +1127,19 @@ void playSongMovement()
 
 					}
 					if(!invisable(c, a, b))
-						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < con->getHeight())
+						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < EmConsole::getHeight())
 							if((*theTrackTmps)[c][a][b].first + noteOffset < fretboardPosition + notes[0][0].getHeight())//draw notes above the fret board
 							{
 								///Normal
-								con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, (*fretNoteColour)[a]);
+								EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, (*fretNoteColour)[a]);
 
 								///Collision Test
-								//con->toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
+								//EmConsole::toConsoleBuffer((*notes)[0], (centerTrack) +(a * 13 + 2), (*songTemp)[a][b] + noteOffset,
 								//					 b != colliCount[a] ? (*noteColour)[a] : FG_INTENSIFY | FG_WHITE);
 
 							}
 							else//draw notes below the fret board
-								con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, FG_RED);
+								EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a][b].first + noteOffset, FG_RED);
 				}
 			}
 		else if(trackInfo[0][c].instrument == "drum")
@@ -1160,7 +1157,7 @@ void playSongMovement()
 					if(b > countAmountDrum[a])
 					{
 						//note drop off
-						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > con->getHeight())
+						if((*theTrackTmps)[c][a][b - 1].first + noteOffset > EmConsole::getHeight())
 							countAmountDrum[a]++;
 
 						if(((*theTrackTmps)[c][a][b - 1].first >= (abs((*theTrackTmps)[c][a][b].first) - abs((*theTrackTmps)[c][a][b - 1].first))))//if the note below is off screen? (actually idk)
@@ -1172,25 +1169,25 @@ void playSongMovement()
 
 
 					if(!invisable(c, a, b))
-						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < con->getHeight())
+						if((*theTrackTmps)[c][a][b].first + noteOffset > -3 && (*theTrackTmps)[c][a][b].first + noteOffset < EmConsole::getHeight())
 							if((*theTrackTmps)[c][a][b].first + noteOffset < fretboardPosition + notes[0][0].getHeight())//draw notes above the fret board
 							{
 								///Normal
 								if(!a)
-									con->toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, (*theTrackTmps)[c][a][b].first + noteOffset + 1, (*padNoteColour)[0]);
+									EmConsole::toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, (*theTrackTmps)[c][a][b].first + noteOffset + 1, (*padNoteColour)[0]);
 								else
 									a--,
-									con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a + 1][b].first + noteOffset, (*padNoteColour)[a + 1]),
+									EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a + 1][b].first + noteOffset, (*padNoteColour)[a + 1]),
 									a++;
 
 							}
 							else//draw notes below the fret board
 							{
 								if(!a)
-									con->toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, (*theTrackTmps)[c][a][b].first + noteOffset + 1, FG_RED);
+									EmConsole::toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, (*theTrackTmps)[c][a][b].first + noteOffset + 1, FG_RED);
 								else
 									a--,
-									con->toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a + 1][b].first + noteOffset, FG_RED),
+									EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(a * 13 + 2) + count, (*theTrackTmps)[c][a + 1][b].first + noteOffset, FG_RED),
 									a++;
 							}
 				}
@@ -1199,7 +1196,7 @@ void playSongMovement()
 	}
 	//Lyrics Movement
 	static Sprite lyricBox("Game Files/Lyrics Box.txt");
-	con->toConsoleBuffer(lyricBox, con->getWidth() / 2 - lyricBox.getWidth() / 2, 0);
+	EmConsole::toConsoleBuffer(lyricBox, EmConsole::getWidth() / 2 - lyricBox.getWidth() / 2, 0);
 	for(uint a = firstLyric; a < lyrics->size(); a++)
 	{
 		if(incriment > (long)lyricTiming[0][a].back().second)
@@ -1215,21 +1212,21 @@ void playSongMovement()
 				phrase += b;
 
 			1 > lyrics[0][a].size() - 1 ?
-				con->toConsoleBuffer(lyrics[0][a][0], int(con->getWidth() / 2 - phrase.size() / 2), 2,
-					lyricTiming[0][a][0].first <= (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
+				EmConsole::toConsoleBuffer(lyrics[0][a][0], int(EmConsole::getWidth() / 2 - phrase.size() / 2), 2,
+										   lyricTiming[0][a][0].first <= (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
 				:
-				con->toConsoleBuffer(lyrics[0][a][0], int(con->getWidth() / 2 - phrase.size() / 2), 2,
-					lyricTiming[0][a][0].first <= (uint)incriment && lyricTiming[0][a][1].first > (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
+				EmConsole::toConsoleBuffer(lyrics[0][a][0], int(EmConsole::getWidth() / 2 - phrase.size() / 2), 2,
+										   lyricTiming[0][a][0].first <= (uint)incriment && lyricTiming[0][a][1].first > (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
 				;
 
 			uint length = 0;
 			for(uint b = 1; b < lyrics[0][a].size(); b++)
 				b + 1 > lyrics[0][a].size() - 1 ?
-				con->toConsoleBuffer(lyrics[0][a][b], int(con->getWidth() / 2 - phrase.size() / 2 + (length += lyrics[0][a][b - 1].size())), 2,
-					lyricTiming[0][a][b].first <= (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
+				EmConsole::toConsoleBuffer(lyrics[0][a][b], int(EmConsole::getWidth() / 2 - phrase.size() / 2 + (length += lyrics[0][a][b - 1].size())), 2,
+										   lyricTiming[0][a][b].first <= (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
 				:
-				con->toConsoleBuffer(lyrics[0][a][b], int(con->getWidth() / 2 - phrase.size() / 2 + (length += lyrics[0][a][b - 1].size())), 2,
-					lyricTiming[0][a][b].first <= (uint)incriment && lyricTiming[0][a][b + 1].first > (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
+				EmConsole::toConsoleBuffer(lyrics[0][a][b], int(EmConsole::getWidth() / 2 - phrase.size() / 2 + (length += lyrics[0][a][b - 1].size())), 2,
+										   lyricTiming[0][a][b].first <= (uint)incriment && lyricTiming[0][a][b + 1].first > (uint)incriment ? FG_GREEN | FG_INTENSIFY : FG_WHITE | FG_INTENSIFY)
 				;
 		}
 
@@ -1267,9 +1264,9 @@ void playButtonPress()
 		bool newSpeed = KeyInput::stroke(VK_NUMPAD4);
 
 		if((newSpeed) || KeyInput::stroke(VK_NUMPAD6))
-			if(((spacingScale * 2)* (speedPercent + (newSpeed ? .25f : -.25f))) > 0 && ((float)(*notes)[0].getHeight() /
-				((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) -
-				((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) - spacingScale * 2) * 2))) > 0)
+			if(((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f))) > 0 && ((float)(*notes)[0].getHeight() /
+			   ((float)spacingScale / ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) -
+			   ((spacingScale * 2) * (speedPercent + (newSpeed ? .25f : -.25f)) - spacingScale * 2) * 2))) > 0)
 
 				noteSpeed = spacingScale * 2,
 				noteSpeed *= int(speedPercent += (newSpeed ? .25f : -.25f));
@@ -1298,15 +1295,15 @@ void playButtonPress()
 
 				//Strum logic (if there is any)
 				if([&]()->bool
-					{
-						up = KeyInput::press(VK_UP) || XinputManager::getController(trackInfo[0][b].player)->isButtonPressed(GUITAR_STRUM_UP);
-							down = KeyInput::press(VK_DOWN) || XinputManager::getController(trackInfo[0][b].player)->isButtonPressed(GUITAR_STRUM_DOWN);
-							currentStrum = up ? (down ? 4 : 2) : (down ? 1 : -1);
+				{
+					up = KeyInput::press(VK_UP) || XinputManager::getController(trackInfo[0][b].player)->isButtonPressed(GUITAR_STRUM_UP);
+						down = KeyInput::press(VK_DOWN) || XinputManager::getController(trackInfo[0][b].player)->isButtonPressed(GUITAR_STRUM_DOWN);
+						currentStrum = up ? (down ? 4 : 2) : (down ? 1 : -1);
 
-							if(currentStrum == -1)
-								lastStrum = -1;
-							return (lastStrum != currentStrum) && currentStrum != -1;
-					} ())
+						if(currentStrum == -1)
+							lastStrum = -1;
+						return (lastStrum != currentStrum) && currentStrum != -1;
+				} ())
 				{
 					lastStrum = currentStrum;
 
@@ -1351,13 +1348,13 @@ void playButtonPress()
 
 				//Drum logic (if there is any)
 				if([&]()->bool
-					{
-						int count = 0;
-							for(int a = 0; a < 5; a++)
-								count += pressed[b][a] && initPressed[b][a];
-							return (bool)count;
+				{
+					int count = 0;
+						for(int a = 0; a < 5; a++)
+							count += pressed[b][a] && initPressed[b][a];
+						return (bool)count;
 
-					} ())
+				} ())
 				{
 
 					if(collision(b))
@@ -1384,25 +1381,25 @@ void playButtonPress()
 
 void playTrack()
 {
-	//con->mouseState();
+	//EmConsole::mouseState();
 	if(t1->joinable())
 		t1->join();
 	*t1 = thread(percent);
 	t1->detach();
-	con->toConsoleBuffer((*track)[trackInfo[0][0].instrument == "guitar" || trackInfo[0][0].instrument == "rhythm" ? 0 : 1], centerTrack, 0);
+	EmConsole::toConsoleBuffer((*track)[trackInfo[0][0].instrument == "guitar" || trackInfo[0][0].instrument == "rhythm" ? 0 : 1], centerTrack, 0);
 	int count = 0;
 	for(int a = 1; a < (int)trackInfo->size(); a++)
 	{
 		count += (*track)[trackInfo[0][a - 1].instrument == "guitar" || trackInfo[0][a - 1].instrument == "rhythm" ? 0 : 1].getWidth();
-		con->toConsoleBuffer((*track)[trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? 0 : 1], centerTrack +
-			count, 0);
+		EmConsole::toConsoleBuffer((*track)[trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? 0 : 1], centerTrack +
+								   count, 0);
 	}
 	barLines();
 	playSongMovement();
 	playButtonPress();
 
-	con->toConsoleBuffer(*box, con->getWidth() - (*box).getWidth(), 0);
-	con->toConsoleBuffer(*percentstr, con->getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
+	EmConsole::toConsoleBuffer(*box, EmConsole::getWidth() - (*box).getWidth(), 0);
+	EmConsole::toConsoleBuffer(*percentstr, EmConsole::getWidth() - (*box).getWidth() / 2 - (percentstr->size() + 1) / 2, 2);
 
 	count = 0;
 	for(int a = 0; a < (int)trackInfo->size(); a++)
@@ -1411,13 +1408,13 @@ void playTrack()
 		// draws frets that light up when key is pressed
 		if(trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm")
 			for(short b = 0; b < 5; b++)
-				con->toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*fretColour)[b]);
+				EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*fretColour)[b]);
 
 		else if(trackInfo[0][a].instrument == "drum")
 		{
-			con->toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, fretboardPosition + 1, (*padColour)[0]);
+			EmConsole::toConsoleBuffer((*notes)[2], (centerTrack)+1 + count, fretboardPosition + 1, (*padColour)[0]);
 			for(short b = 0; b < 4; b++)
-				con->toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*padColour)[b + 1]);
+				EmConsole::toConsoleBuffer((*notes)[0], (centerTrack)+(b * 13 + 2) + count, fretboardPosition, (*padColour)[b + 1]);
 		}
 
 		count += (*track)[trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? 0 : 1].getWidth();
@@ -1425,22 +1422,22 @@ void playTrack()
 	}
 
 	ushort a;
-	static int healthX = 0, healthY = con->getHeight() - 1;
-	con->toConsoleBuffer(L"┏━┓", healthX, healthY - HEALTH_CAP - 1);
+	static int healthX = 0, healthY = EmConsole::getHeight() - 1;
+	EmConsole::toConsoleBuffer(L"┏━┓", healthX, healthY - HEALTH_CAP - 1);
 
 	for(a = 1; a <= HEALTH_CAP; a++)
-		con->toConsoleBuffer(L"┃ ┃", healthX, healthY - a);
+		EmConsole::toConsoleBuffer(L"┃ ┃", healthX, healthY - a);
 
 	int tmp = (int)ceil(currentHealth);
 	int bar[]{FG_RED | FG_INTENSIFY,FG_YELLOW | FG_INTENSIFY,FG_GREEN | FG_INTENSIFY};
 	for(a = 1; a <= tmp; a++)
 		if((a == tmp) && (bool)ceil(fmodf(currentHealth, 1)))
-			con->toConsoleBuffer(L"▄", healthX + 1, healthY - a, bar[int(currentHealth / HEALTH_CAP * 3 > 2 ? 2 : currentHealth / HEALTH_CAP * 3)]);
+			EmConsole::toConsoleBuffer(L"▄", healthX + 1, healthY - a, bar[int(currentHealth / HEALTH_CAP * 3 > 2 ? 2 : currentHealth / HEALTH_CAP * 3)]);
 		else
-			con->toConsoleBuffer(L"█", healthX + 1, healthY - a, bar[int(currentHealth / HEALTH_CAP * 3 > 2 ? 2 : currentHealth / HEALTH_CAP * 3)]);
+			EmConsole::toConsoleBuffer(L"█", healthX + 1, healthY - a, bar[int(currentHealth / HEALTH_CAP * 3 > 2 ? 2 : currentHealth / HEALTH_CAP * 3)]);
 
 
-	con->toConsoleBuffer(L"┗━┛", healthX, healthY);
+	EmConsole::toConsoleBuffer(L"┗━┛", healthX, healthY);
 }
 #pragma endregion
 #pragma endregion
@@ -1457,8 +1454,8 @@ void songChoiceMovement(int size)
 		if(float(dClock - lastClockT[a]) / CLOCKS_PER_SEC > delay)
 		{
 			lastClockT[a] = dClock;
-			
-			if(KeyInput::press(VK_DOWN) || XinputManager::getController(a)->isButtonPressed(CONTROLLER_DPAD_DOWN) || [&]()->bool {return XinputManager::getControllerType(a)==CONTROLLER_TYPE::XINPUT_DRUM && XinputManager::getController(a)->isButtonPressed(DRUM_PAD_BLUE);}())
+
+			if(KeyInput::press(VK_DOWN) || XinputManager::getController(a)->isButtonPressed(CONTROLLER_DPAD_DOWN) || [&]()->bool {return XinputManager::getControllerType(a) == CONTROLLER_TYPE::XINPUT_DRUM && XinputManager::getController(a)->isButtonPressed(DRUM_PAD_BLUE); }())
 
 			{
 				AudioPlayer::setMasterVolume(1);
@@ -1470,7 +1467,7 @@ void songChoiceMovement(int size)
 				AudioPlayer::setVolume(2);
 				AudioPlayer::play();
 			}
-			else if(KeyInput::press(VK_UP) || XinputManager::getController(a)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP)|| [&]()->bool {return XinputManager::getControllerType(a) == CONTROLLER_TYPE::XINPUT_DRUM && XinputManager::getController(a)->isButtonPressed(DRUM_PAD_YELLOW); }())
+			else if(KeyInput::press(VK_UP) || XinputManager::getController(a)->isButtonPressed(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP) || [&]()->bool {return XinputManager::getControllerType(a) == CONTROLLER_TYPE::XINPUT_DRUM && XinputManager::getController(a)->isButtonPressed(DRUM_PAD_YELLOW); }())
 			{
 				AudioPlayer::setMasterVolume(1);
 				if(songChoice > 0)
@@ -1487,7 +1484,7 @@ void songChoiceMovement(int size)
 
 	for(int a = 0; a < 4; a++)
 		if(XinputManager::getController(a)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_DOWN) && KeyInput::release(VK_DOWN) &&
-			XinputManager::getController(a)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP) && KeyInput::release(VK_UP))
+		   XinputManager::getController(a)->isButtonReleased(GUITAR_INPUT_BUTTONS::GUITAR_STRUM_UP) && KeyInput::release(VK_UP))
 		{
 			lastClockT[a] = std::clock() - uint(CLOCKS_PER_SEC * delay);
 			break;
@@ -1513,7 +1510,7 @@ bool createdSongList()
 		calculateFPS();
 		wchar_t str[20];
 		swprintf_s(str, L"%.2f", fps);
-		con->toConsoleBuffer((wstring(L"fps: ") + str).c_str(), 0, 1);
+		EmConsole::toConsoleBuffer((wstring(L"fps: ") + str).c_str(), 0, 1);
 
 		//guitarstart();//eat this input;
 		KeyInput::press('Q');//eat this input;
@@ -1524,7 +1521,7 @@ bool createdSongList()
 
 		songChoiceMovement(count);
 
-		startHeight = con->getHeight() / 3, endHeight = con->getHeight() - (con->getHeight() - startHeight) / 3, startWidth = con->getWidth() / 2;
+		startHeight = EmConsole::getHeight() / 3, endHeight = EmConsole::getHeight() - (EmConsole::getHeight() - startHeight) / 3, startWidth = EmConsole::getWidth() / 2;
 
 		if(lastSongChoice != songChoice)
 			lastClockT = std::clock();
@@ -1674,27 +1671,27 @@ bool createdSongList()
 			}
 		}
 
-		if(pass || (MouseInput::stroke(LEFT_CLICK) && Sprite(vector<wstring> {songs[songChoice - movement]}).mouseCollision({short(startWidth - (songs[songChoice - movement].size() / 2)), short(startHeight + songChoice - movement)}, MouseInput::position)))
+		if(pass || (MouseInput::stroke(LEFT_CLICK) && Sprite(vector<wstring> {songs[songChoice - movement]}).mouseCollision({float(startWidth - (songs[songChoice - movement].size() / 2)), float(startHeight + songChoice - movement)}, MouseInput::position)))
 		{
 
 			if(![&]()->bool
-				{
-					count = 0;
-						for(auto& a : fs::directory_iterator(path))
+			{
+				count = 0;
+					for(auto& a : fs::directory_iterator(path))
+					{
+						if(songChoice == count++)
 						{
-							if(songChoice == count++)
+							for(auto& b : fs::directory_iterator(a.path()))
 							{
-								for(auto& b : fs::directory_iterator(a.path()))
-								{
-									wstring tmp = b.path();
-										if(tmp.substr(tmp.find_last_of('.') + 1) == L"ini")
-											return true;
-								}
-								continue;
+								wstring tmp = b.path();
+									if(tmp.substr(tmp.find_last_of('.') + 1) == L"ini")
+										return true;
 							}
+							continue;
 						}
-					return false;
-				}())
+					}
+				return false;
+			}())
 			{
 				count = 0;
 				for(auto& a : fs::directory_iterator(path))
@@ -1755,12 +1752,12 @@ bool createdSongList()
 		if(songChoice >= (endHeight - startHeight) / 3 && songChoice < count - (endHeight - startHeight) / 3)
 			movement =
 			(
-				startHeight + songChoice - movement > startHeight + (endHeight - startHeight) / 3 ?
-				(startHeight + songChoice - movement > endHeight - (endHeight - startHeight) / 3 ?
-					songChoice - (endHeight - (endHeight - startHeight) / 3 - startHeight) : movement)
-				:
-				songChoice - (endHeight - startHeight) / 3
-				);
+			startHeight + songChoice - movement > startHeight + (endHeight - startHeight) / 3 ?
+			(startHeight + songChoice - movement > endHeight - (endHeight - startHeight) / 3 ?
+			songChoice - (endHeight - (endHeight - startHeight) / 3 - startHeight) : movement)
+			:
+			songChoice - (endHeight - startHeight) / 3
+			);
 
 		else if(songChoice < (endHeight - startHeight) / 3)
 			movement = 0;
@@ -1770,27 +1767,27 @@ bool createdSongList()
 
 		MouseInput::update();
 		uint tmp;
-		if((tmp = MouseInput::position.Y - startHeight) >= 0 && MouseInput::position.Y >= startHeight && MouseInput::position.Y <= endHeight && tmp < songs.size())
-			if(Sprite(vector<wstring> {songs[tmp]}).mouseCollision({short(startWidth - (songs[tmp].size() / 2)), short(startHeight + tmp)}, MouseInput::position))
-				songChoice = MouseInput::position.Y - startHeight + movement;
+		if((tmp = MouseInput::position.y - startHeight) >= 0 && MouseInput::position.y >= startHeight && MouseInput::position.y <= endHeight && tmp < songs.size())
+			if(Sprite(vector<wstring> {songs[tmp]}).mouseCollision({float(startWidth - (songs[tmp].size() / 2)), float(startHeight + tmp)}, MouseInput::position))
+				songChoice = MouseInput::position.y - startHeight + movement;
 
 
 		for(uint a = 0; a < songs.size(); a++)
-			con->toConsoleBuffer(songs[a], startWidth - (songs[a].size() / 2), startHeight + a, ((uint)songChoice - movement == a ? colours[1] : colours[0]));
+			EmConsole::toConsoleBuffer(songs[a], startWidth - (songs[a].size() / 2), startHeight + a, ((uint)songChoice - movement == a ? colours[1] : colours[0]));
 
 
-		con->toConsoleBuffer(L"Song List", startWidth - 4, startHeight - 2);
-		con->toConsoleBuffer(L"----------------------------", startWidth - 14, startHeight - 1);
-		con->toConsoleBuffer(L"----------------------------", startWidth - 14, endHeight + 1);
+		EmConsole::toConsoleBuffer(L"Song List", startWidth - 4, startHeight - 2);
+		EmConsole::toConsoleBuffer(L"----------------------------", startWidth - 14, startHeight - 1);
+		EmConsole::toConsoleBuffer(L"----------------------------", startWidth - 14, endHeight + 1);
 
 		for(int a = 0; a < 2; a++)
-			con->toConsoleBuffer(notes[0][0], int(con->getWidth() * .1f) + 12 * a, con->getHeight() - 4, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteMsg[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, con->getHeight() - 3, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a]);
+			EmConsole::toConsoleBuffer(notes[0][0], int(EmConsole::getWidth() * .1f) + 12 * a, EmConsole::getHeight() - 4, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteMsg[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, EmConsole::getHeight() - 3, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteKey[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, EmConsole::getHeight() - 5, fretNoteColour[0][a]);
 
 		if(songChoice - movement >= 0 && (uint)songChoice - movement < songs.size())
-			* songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
-		con->drawConsole();
+			*songName = string(songs[songChoice - movement].begin(), songs[songChoice - movement].end());
+		EmConsole::drawConsole();
 
 	}
 
@@ -1801,7 +1798,8 @@ bool difficultyMenu()
 {
 
 	static int selectx[4], selecty[4];
-	ushort numBoxes = 4, x = 0, y = 0, colours[]{FG_WHITE,FG_GREEN | FG_INTENSIFY};
+	int x = 0, y = 0;
+	ushort numBoxes = 4 , colours[]{FG_WHITE,FG_GREEN | FG_INTENSIFY};
 	string instruments[]{"GUITAR","BASS","DRUM"}, instruments2[]{"guitar","rhythm","drum"};
 	wstring options[]{L"Easy",L"Medium",L"Hard",L"Expert"};
 	wstring noteMsg[]{L"Select",L"Back"}, noteKey[]{L"A",L"S"};
@@ -1846,7 +1844,7 @@ bool difficultyMenu()
 
 			if(inits[a])
 			{
-				x = con->getWidth() / 2 - (ushort)ceil((float)box->getWidth() / 2), y = con->getHeight() / 2 - 5;
+				x = EmConsole::getWidth() / 2 - (ushort)ceil((float)box->getWidth() / 2), y = EmConsole::getHeight() / 2 - 5;
 				if(XinputManager::getController(a)->isButtonStroked(CONTROLLER_DPAD_UP))
 					AudioPlayer::createAudioStream("sfx/Guitar_Miss_2.wav"),
 					AudioPlayer::play(),
@@ -1900,20 +1898,20 @@ bool difficultyMenu()
 
 			int spacing = 35 / 4 * (trackInfo->size() - 1 < 0 ? 0 : trackInfo->size() - 1);
 
-			con->toConsoleBuffer(L"Difficulty", con->getWidth() / 2 - 5 - (18 * (trackInfo->size() - b - 1)) + spacing, y - 3);
-			con->toConsoleBuffer(wstring(instruments[selectx[trackInfo[0][b].player]].begin(), instruments[selectx[trackInfo[0][b].player]].end()).c_str(),
-				con->getWidth() / 2 - instruments[selectx[trackInfo[0][b].player]].size() / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y - 1, FG_RED | FG_INTENSIFY);
-			con->toConsoleBuffer(L"-----------------------------------", con->getWidth() / 2 - 18 - (18 * (trackInfo->size() - b - 1)) + spacing, y);
+			EmConsole::toConsoleBuffer(L"Difficulty", EmConsole::getWidth() / 2 - 5 - (18 * (trackInfo->size() - b - 1)) + spacing, y - 3);
+			EmConsole::toConsoleBuffer(wstring(instruments[selectx[trackInfo[0][b].player]].begin(), instruments[selectx[trackInfo[0][b].player]].end()).c_str(),
+									   EmConsole::getWidth() / 2 - instruments[selectx[trackInfo[0][b].player]].size() / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y - 1, FG_RED | FG_INTENSIFY);
+			EmConsole::toConsoleBuffer(L"-----------------------------------", EmConsole::getWidth() / 2 - 18 - (18 * (trackInfo->size() - b - 1)) + spacing, y);
 
 			if(!ready[trackInfo[0][b].player])
 				//draw selection boxes
 				for(int a = 0; a < numBoxes; a++)
-					con->toConsoleBuffer(*box, x - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 1, colours[selecty[trackInfo[0][b].player] == a]),
-					con->toConsoleBuffer(options[a], x + (box->getWidth() / 2) - options[a].size() / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 3, colours[selecty[trackInfo[0][b].player] == a]);
+					EmConsole::toConsoleBuffer(*box, x - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 1, colours[selecty[trackInfo[0][b].player] == a]),
+					EmConsole::toConsoleBuffer(options[a], x + (box->getWidth() / 2) - options[a].size() / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 3, colours[selecty[trackInfo[0][b].player] == a]);
 			else
 				for(int a = 0; a < numBoxes; a++)
-					con->toConsoleBuffer(*box, x - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 1, colours[1]),
-					con->toConsoleBuffer(L"READY", x + (box->getWidth() / 2) - 5 / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 3, colours[1]);
+					EmConsole::toConsoleBuffer(*box, x - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 1, colours[1]),
+					EmConsole::toConsoleBuffer(L"READY", x + (box->getWidth() / 2) - 5 / 2 - (18 * (trackInfo->size() - b - 1)) + spacing, y + a * 5 + 3, colours[1]);
 
 			switch(selecty[trackInfo[0][b].player])
 			{
@@ -1932,10 +1930,10 @@ bool difficultyMenu()
 			}
 		}
 		for(int a = 0; a < 2; a++)
-			con->toConsoleBuffer(notes[0][0], int(con->getWidth() * .1f) + 12 * a, con->getHeight() - 4, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteMsg[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, con->getHeight() - 3, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a]);
-		con->drawConsole();
+			EmConsole::toConsoleBuffer(notes[0][0], int(EmConsole::getWidth() * .1f) + 12 * a, EmConsole::getHeight() - 4, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteMsg[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, EmConsole::getHeight() - 3, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteKey[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, EmConsole::getHeight() - 5, fretNoteColour[0][a]);
+		EmConsole::drawConsole();
 	}
 }
 #pragma endregion
@@ -2033,19 +2031,19 @@ void controles()
 	controles.create("Game Files/Controles.txt");
 	while((XinputManager::update(), !selector() && !deselect()))
 	{
-		con->toConsoleBuffer(controles, con->getWidth() / 2 - controles.getWidth() / 2, con->getHeight() / 2 - controles.getHeight() / 2);
+		EmConsole::toConsoleBuffer(controles, EmConsole::getWidth() / 2 - controles.getWidth() / 2, EmConsole::getHeight() / 2 - controles.getHeight() / 2);
 		int a = 0;
-		con->toConsoleBuffer(notes[0][0], int(con->getWidth() * .1f) + 12 * a, con->getHeight() - 4, fretNoteColour[0][a + 1]);
-		con->toConsoleBuffer(noteMsg[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, con->getHeight() - 3, fretNoteColour[0][a + 1]);
-		con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a + 1]);
+		EmConsole::toConsoleBuffer(notes[0][0], int(EmConsole::getWidth() * .1f) + 12 * a, EmConsole::getHeight() - 4, fretNoteColour[0][a + 1]);
+		EmConsole::toConsoleBuffer(noteMsg[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, EmConsole::getHeight() - 3, fretNoteColour[0][a + 1]);
+		EmConsole::toConsoleBuffer(noteKey[a], int(EmConsole::getWidth() * .1f) + 12 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, EmConsole::getHeight() - 5, fretNoteColour[0][a + 1]);
 
-		con->drawConsole();
+		EmConsole::drawConsole();
 	}
 }
 
 bool startScreen()
 {
-	int x = con->getWidth() / 2 - box->getWidth() / 2, y = con->getHeight() / 2 - (2 * (box->getHeight() / 2)),
+	int x = EmConsole::getWidth() / 2 - box->getWidth() / 2, y = EmConsole::getHeight() / 2 - (2 * (box->getHeight() / 2)),
 		colours[] = {FG_WHITE,FG_GREEN | FG_INTENSIFY}, numBoxes = 2;
 	bool exit = false, enter = false;
 	wstring options[]{L"Single Play",L"Controls"}, noteMsg[]{L"Select"}, noteKey[]{L"A"};
@@ -2060,7 +2058,7 @@ bool startScreen()
 		AudioPlayer::update();
 
 		for(int a = 0; a < numBoxes; a++)
-			if(box->mouseCollision({(short)x,short(y + a * 5 + 1)}, MouseInput::position))
+			if(box->mouseCollision({(float)x,float(y + a * 5 + 1)}, MouseInput::position))
 			{
 				create = a;
 				if(MouseInput::stroke(LEFT_CLICK))
@@ -2070,7 +2068,7 @@ bool startScreen()
 			}
 
 		//MouseInput::stroke(LEFT_CLICK);//eat this input
-		x = con->getWidth() / 2 - (*box).getWidth() / 2, y = con->getHeight() / 2 - (2 * (box->getHeight() / 2));
+		x = EmConsole::getWidth() / 2 - (*box).getWidth() / 2, y = EmConsole::getHeight() / 2 - (2 * (box->getHeight() / 2));
 		XinputManager::update();
 
 		if(goup())
@@ -2087,21 +2085,21 @@ bool startScreen()
 		if(create < 0)
 			create = numBoxes - 1;
 
-		con->toConsoleBuffer((*logo)[0], con->getWidth() / 2 - (*logo)[0].getWidth() / 2, 10, FG_RED | FG_INTENSIFY);
+		EmConsole::toConsoleBuffer((*logo)[0], EmConsole::getWidth() / 2 - (*logo)[0].getWidth() / 2, 10, FG_RED | FG_INTENSIFY);
 
 
 		//draw selection boxes
 		for(int a = 0; a < numBoxes; a++)
-			con->toConsoleBuffer(*box, x, y + a * 5, colours[create == a]),
-			con->toConsoleBuffer(options[a], x + (box->getWidth() / 2) - options[a].size() / 2, y + a * 5 + 2, colours[create == a]);
+			EmConsole::toConsoleBuffer(*box, x, y + a * 5, colours[create == a]),
+			EmConsole::toConsoleBuffer(options[a], x + (box->getWidth() / 2) - options[a].size() / 2, y + a * 5 + 2, colours[create == a]);
 
 		for(int a = 0; a < 1; a++)
-			con->toConsoleBuffer(notes[0][0], int(con->getWidth() * .1f) + 10 * a, con->getHeight() - 4, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteMsg[a], int(con->getWidth() * .1f) + 10 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, con->getHeight() - 3, fretNoteColour[0][a]),
-			con->toConsoleBuffer(noteKey[a], int(con->getWidth() * .1f) + 10 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, con->getHeight() - 5, fretNoteColour[0][a]);
+			EmConsole::toConsoleBuffer(notes[0][0], int(EmConsole::getWidth() * .1f) + 10 * a, EmConsole::getHeight() - 4, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteMsg[a], int(EmConsole::getWidth() * .1f) + 10 * a + notes[0][0].getWidth() / 2 - noteMsg[a].size() / 2, EmConsole::getHeight() - 3, fretNoteColour[0][a]),
+			EmConsole::toConsoleBuffer(noteKey[a], int(EmConsole::getWidth() * .1f) + 10 * a + notes[0][0].getWidth() / 2 - noteKey[a].size() / 2, EmConsole::getHeight() - 5, fretNoteColour[0][a]);
 
 
-		con->drawConsole();
+		EmConsole::drawConsole();
 
 		deselect();//eat this input
 
@@ -2131,6 +2129,8 @@ bool startScreen()
 
 int main()
 {
+	EmConsole::init("RockBand in Console");
+
 	AudioPlayer::init();
 	logo->create("Game Files/Logo.txt");
 	track->create("Game Files/Track.txt");
@@ -2140,9 +2140,9 @@ int main()
 
 	//XinputManager::getController(0)->setVibrationR(1);
 
-	con->setConsoleSize((*track)[0].getWidth() * 2, int((*track)[0].getHeight() * .70));
-	con->placeConsoleCenter();
-	con->setResizable(true);
+	EmConsole::setConsoleSize((*track)[0].getWidth() * 2, short((*track)[0].getHeight() * .70));
+	EmConsole::placeConsoleCenter();
+	EmConsole::setResizeable(true);
 
 	std::vector<std::wstring>* boxy = new  std::vector < std::wstring >;
 	*boxy =
@@ -2167,10 +2167,10 @@ int main()
 			{
 				AudioPlayer::update();
 
-				centerTrack = con->getWidth() / 2;
+				centerTrack = EmConsole::getWidth() / 2;
 				for(int a = 0; a < (int)trackInfo->size(); a++)
 					centerTrack -= trackInfo[0][a].instrument == "guitar" || trackInfo[0][a].instrument == "rhythm" ? (*track)[0].getWidth() / 2 : (*track)[1].getWidth() / 2;
-				fretboardPosition = con->getHeight() - 7;
+				fretboardPosition = EmConsole::getHeight() - 7;
 				//	fretboardXPosition = (centerTrack) + (a * 13 + 2)
 
 				if(!create)
@@ -2183,11 +2183,11 @@ int main()
 				calculateFPS();
 				wchar_t str[20];
 				swprintf_s(str, L"%.2f", fps);
-				con->toConsoleBuffer((wstring(L"fps: ") + str).c_str(), 0, 1);
+				EmConsole::toConsoleBuffer((wstring(L"fps: ") + str).c_str(), 0, 1);
 
 				//#endif // _DEBUG
 
-				con->drawConsole();
+				EmConsole::drawConsole();
 			}
 			if(t1->joinable())
 				t1->join();

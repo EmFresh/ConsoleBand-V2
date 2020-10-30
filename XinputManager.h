@@ -71,7 +71,8 @@ struct Stick
 	float x, y;
 };
 
-struct Triggers {
+struct Triggers
+{
 	float L, R;
 };
 
@@ -88,30 +89,30 @@ struct XinputDevice
 		XInputGetState(index, &info);
 	}
 
-	void setVibration(float L, float R) 
+	void setVibration(float L, float R)
 	{
 		XINPUT_VIBRATION vibration;
 		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
-		vibration.wLeftMotorSpeed = 65535 * L; // use any value between 0-65535 here
-		vibration.wRightMotorSpeed = 65535 * R; // use any value between 0-65535 here
+		vibration.wLeftMotorSpeed = WORD(65535 * L); // use any value between 0-65535 here
+		vibration.wRightMotorSpeed = WORD(65535 * R); // use any value between 0-65535 here
 		XInputSetState(index, &vibration);
 	}
 
-	void setVibrationL(float L) 
+	void setVibrationL(float L)
 	{
 		XINPUT_VIBRATION vibration;
 		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
 		setVibration(L, vibration.wRightMotorSpeed);
 	}
 
-	void setVibrationR(float R) 
+	void setVibrationR(float R)
 	{
 		XINPUT_VIBRATION vibration;
 		ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
 		setVibration(vibration.wLeftMotorSpeed, R);
 	}
 
-	void resetVibration() 
+	void resetVibration()
 	{
 		setVibration(0, 0);
 	}
