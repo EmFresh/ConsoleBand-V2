@@ -2130,8 +2130,8 @@ bool startScreen()
 int main()
 {
 	EmConsole::init("RockBand in Console");
-
 	AudioPlayer::init();
+
 	logo->create("Game Files/Logo.txt");
 	track->create("Game Files/Track.txt");
 	notes->create("Game Files/Notes.txt");

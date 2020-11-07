@@ -1,19 +1,18 @@
 #pragma once
-//#define clamp(val, min, max) (val > max ? max : val < min ? min : val)
 //#include <GL/glew.h>
 //#include <glm/common.hpp>
 #include <string>
 
-#define reclass(a_class,a_val) (*(a_class*)&(a_val))
 typedef const char* cstring;
 typedef  unsigned char ubyte;
 typedef  unsigned int uint;
 typedef  unsigned short ushort;
-//#define unsigned int unsigned int
-//#define ushort unsigned short
+
 
 namespace util
 {
+#define clamp(val, mini, maxi) (val > maxi ? maxi : val < mini ? mini : val)
+#define reclass(a_class,a_val) (*(a_class*)&(a_val))
 
 	static cstring cDir(char* dir)
 	{

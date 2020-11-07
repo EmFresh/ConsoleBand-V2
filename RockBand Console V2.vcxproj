@@ -70,31 +70,31 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)Console Band (Less songs)\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(OutDir)</IntDir>
-    <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\</OutDir>
+    <IntDir>$(OutDir)Junck\</IntDir>
+    <IncludePath>$(ProjectDir)Externals\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Externals\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(OutDir)</IntDir>
-    <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\</OutDir>
+    <IntDir>$(OutDir)Junck\</IntDir>
+    <IncludePath>$(ProjectDir)Externals\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Externals\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(OutDir)</IntDir>
-    <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\</OutDir>
+    <IntDir>$(OutDir)Junck\</IntDir>
+    <IncludePath>$(ProjectDir)Externals\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Externals\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)Console Band (Less songs)\$(Configuration)\$(Platform)\</OutDir>
-    <IntDir>$(OutDir)</IntDir>
-    <IncludePath>$(SolutionDir)Externals\include\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Externals\lib\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)Console Band (Less songs)\</OutDir>
+    <IntDir>$(OutDir)Junck\</IntDir>
+    <IncludePath>$(ProjectDir)Externals\include\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)Externals\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>Console Band V2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -103,12 +103,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4201;4505;4244;4706</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -117,12 +118,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4201;4505;4244;4706</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod64_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -133,14 +135,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4201;4505;4244;4706</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,16 +154,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4201;4505;4244;4706</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>
-      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod64_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
