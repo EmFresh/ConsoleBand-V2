@@ -25,8 +25,8 @@ enum CONTROLLER_INPUT_BUTTONS
 	CONTROLLER_Y = XINPUT_GAMEPAD_Y,
 	CONTROLLER_LB = XINPUT_GAMEPAD_LEFT_SHOULDER,
 	CONTROLLER_RB = XINPUT_GAMEPAD_RIGHT_SHOULDER,
-	CONTROLLER_THUMB_LEFT = XINPUT_GAMEPAD_LEFT_THUMB,
-	CONTROLLER_THUMB_RIGHT = XINPUT_GAMEPAD_RIGHT_THUMB,
+	CONTROLLER_LSB = XINPUT_GAMEPAD_LEFT_THUMB,
+	CONTROLLER_RSB = XINPUT_GAMEPAD_RIGHT_THUMB,
 	CONTROLLER_SELECT = XINPUT_GAMEPAD_BACK,
 	CONTROLLER_START = XINPUT_GAMEPAD_START
 };
@@ -154,13 +154,15 @@ private:
 struct XinputGuitar:public XinputDevice
 {
 	XinputGuitar() {}
-	//XinputGuitar(XinputDevice div) :XinputDevice(div) {};
+	
 	~XinputGuitar() {}
 
 	int getFrets()
 	{
 		return info.Gamepad.wButtons;
 	}
+
+	bool isSoloButtonPressed(int bitmask) { return bitmask & CONTROLLER_INPUT_BUTTONS::CONTROLLER_LSB; }
 
 	bool isFretPressed(int bitmask)
 	{

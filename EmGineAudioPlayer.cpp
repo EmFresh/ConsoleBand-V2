@@ -47,7 +47,7 @@ void EmGineAudioPlayer::createAudio(const char * file)
 	m_control->push_back(new AudioControle{newSound,nullptr});
 	//m_controle->push_back(nullptr);
 
-	printError(m_system->playSound(m_control[0][m_control->size() - 1]->sound, m_mainChannelGroup, false, &m_control->back()->channel), "Line 50");
+	printError(m_system->playSound(m_control[0][m_control->size() - 1]->sound, m_mainChannelGroup, true, &m_control->back()->channel), "Line 50");
 	//m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
@@ -61,7 +61,7 @@ void EmGineAudioPlayer::createAudioStream(const char * file)
 	}
 
 	m_control->push_back(new AudioControle{newSound,nullptr});
-	printError(m_system->playSound(m_control[0][m_control->size() - 1]->sound, m_mainChannelGroup, false, &m_control->back()->channel), "Line 64");
+	printError(m_system->playSound(m_control[0][m_control->size() - 1]->sound, m_mainChannelGroup, true, &m_control->back()->channel), "Line 64");
 	//m_controle->back()->channel->setCallback(cleanUpCallback);
 }
 
@@ -90,10 +90,6 @@ void EmGineAudioPlayer::play(bool loop, bool newInst, uint index, uint from, uin
 	cleanup();
 }
 
-template<class T> T lerp(float t, T p1, T p2)
-{
-	return (1.f - t)*p1 + t * p2;
-}
 
 void EmGineAudioPlayer::playAll(bool loop, uint from, uint to, FMOD_TIMEUNIT unit)
 {

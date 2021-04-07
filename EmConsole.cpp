@@ -1065,13 +1065,14 @@ void EmConsole::drawConsole(bool clear)
 	{
 		SetConsoleActiveScreenBuffer(m_con[m_buff]);
 
-		//have not tested yet
-		//swap(_con[_buff], _con[!_buff]);
+		////have not tested yet
+		//std::swap(_con[_buff], _con[!_buff]);
 
-		//tryed and true
+		//tried and true
 		HANDLE temp = m_con[m_buff];
 		m_con[m_buff] = m_con[!m_buff];
 		m_con[!m_buff] = temp;
+		
 		m_buff = !m_buff;
 	}
 	else

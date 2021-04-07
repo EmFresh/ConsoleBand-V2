@@ -6,6 +6,7 @@
 #pragma once
 #include <Windows.h>
 #include <fstream>
+#include <codecvt>
 #include <thread>
 #include <string>
 #include <vector>
@@ -119,14 +120,19 @@ struct Sprite
 
 	#pragma region modern
 
-		std::wfstream unicodeFile(file, std::ios::in);
+		std::wifstream unicodeFile(file);
+		unicodeFile.imbue(std::locale("zh_CN.UTF-8"));
 		std::wstring line;
 
-		for(int a = 0; getline(unicodeFile, line); a++)
-			m_sprite.push_back(line);
+		while(getline(unicodeFile, line))
+			m_sprite.push_back(line),
+			m_width = m_width < (ushort)(m_sprite[m_height]).size() ? (ushort)(m_sprite[m_height]).size() : m_width,
+			m_height++;
+
+		if(m_sprite.size())
+			m_sprite[0] = m_sprite[0].substr(1);
 
 		unicodeFile.close();
-
 	#pragma endregion
 
 	}
@@ -281,46 +287,74 @@ struct SpriteSheet
 	*/
 	void create(const char* file, const wchar_t* split = L"")
 	{
-		FILE* f;
-
-		wchar_t* str2 = new wchar_t[255];
-
 		std::vector<std::wstring> sprite;
-		unsigned short width = 0, height = 0;
-		bool seg = 0;
-		std::wstring str;
+		unsigned short  height = 0;
+		bool seg = false;
+		std::wstring line;
 
-		fopen_s(&f, file, "r, ccs=UNICODE");
+	#pragma region C-Style
+		//FILE* f;
+		//wchar_t* str = new wchar_t[255];
+		//fopen_s(&f, file, "r, ccs=UNICODE");
+		//
+		//while(str = fgetws(str, 255, f),
+		//	  line = (str == nullptr ? L"" :
+		//	  (str[wcslen(str) - 1] = (str[wcslen(str) - 1] == '\n' ? '\0' : str[wcslen(str) - 1]), str)),
+		//	  str != nullptr)
+		//{
+		//	if(line == split)
+		//	{
+		//		if(!seg)
+		//		{
+		//			add(&sprite);
+		//
+		//			width = 0, height = 0;
+		//			sprite.clear();
+		//		}
+		//		seg = true;
+		//		continue;
+		//	}
+		//
+		//	width = width < (ushort)line.size() ? (ushort)line.size() : width;
+		//	sprite.push_back(line);
+		//	height++;
+		//	seg = false;
+		//}
+		//fclose(f);
+		//delete[] str;
+	#pragma endregion
 
-		while(str2 = fgetws(str2, 255, f),
-			  str = (str2 == nullptr ? L"" :
-			  (str2[wcslen(str2) - 1] = (str2[wcslen(str2) - 1] == '\n' ? '\0' : str2[wcslen(str2) - 1]), str2)),
-			  str2 != nullptr)
+	#pragma region Modern
+		std::wifstream unicodeFile(file);
+		unicodeFile.imbue(std::locale("zh_CN.UTF-8"));
+		bool init = false;
+
+		while(getline(unicodeFile, line))
 		{
-			if(str == split)
+			if(!init)
+				init = true,
+				line = line.substr(1);
+
+			if(line == split)
 			{
 				if(!seg)
 				{
 					add(&sprite);
-
-					width = 0, height = 0;
+					height = 0;
 					sprite.clear();
 				}
 				seg = true;
 				continue;
 			}
 
-			width = width < (ushort)str.size() ? (ushort)str.size() : width;
-			sprite.push_back(str);
-			height++;
+			sprite.push_back(line);
+			++height;
 			seg = false;
 		}
-		fclose(f);
+	#pragma endregion
 
 		if(height > 0)
 			add(&sprite);
-
-		delete[] str2;
 	}
 
 	void add(Sprite sprite) { m_sheet->push_back(new Sprite(sprite)); }
