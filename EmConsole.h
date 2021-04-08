@@ -172,7 +172,7 @@ struct Sprite
 		return boxCollision(s2, p1, p2);
 	}
 
-	bool mouseCollision(Coord2D<> p1, Coord2D<> mouse)
+	bool mouseCollision(Coord2D<short> p1, Coord2D<short> mouse)
 	{
 		p1 = {p1.x + short(m_width * .5f), p1.y + short(m_height * .5f)};
 
@@ -181,7 +181,8 @@ struct Sprite
 				return true;
 		return false;
 	}
-	bool mouseCollision(Coord2D<> mouse)
+
+	bool mouseCollision(Coord2D<short> mouse)
 	{
 		Coord2D<> p1 = {m_pos.x + m_width, m_pos.y + m_height};
 
@@ -205,7 +206,6 @@ struct Sprite
 	void setPosition(Coord2D<> pos) { m_pos = pos; }
 	void setX(float posx) { m_pos.x = posx; }
 	void setY(float posy) { m_pos.y = posy; }
-
 
 	int getColour() { return m_colour; }
 
@@ -490,7 +490,7 @@ struct MouseInput
 
 	static bool doubleClick;
 	static short vertWheel, horiWheel;
-	static COORD position;
+	static Coord2D<short> position;
 
 	static bool pressed(MouseButtons button)
 	{
@@ -570,6 +570,7 @@ public:
 	EmConsole() = delete;
 
 	static void init();
+	static void init(cstring title);
 
 	static void setFullScreen(bool);
 	static bool getFullScreen();
@@ -1076,16 +1077,5 @@ public:
 	static void clearConsole();
 
 private:
-
-	CHAR_INFO * m_ci;
-	CHAR_INFO **m_ci2;
-	DWORD oldInputMode, newInputMode;
-
-	COORD m_cursorPosition;
-	HANDLE m_con[2], m_input;
-	INPUT_RECORD m_inputRecord[128];
-	COORD m_sz = { 0,0 };
-	UINT m_conWidth, m_conHeight;
-	bool m_buff = 0, m_resizable, m_full = 0;
 
 };

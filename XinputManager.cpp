@@ -24,7 +24,7 @@ CONTROLLER_TYPE XinputManager::getControllerType(int index)
 	XINPUT_CAPABILITIES info;
 	XInputGetCapabilities(index, NULL, &info);
 
-	switch (info.SubType)
+	switch(info.SubType)
 	{
 	case XINPUT_DEVSUBTYPE_GAMEPAD:
 		return XINPUT_CONTROLLER;
@@ -46,3 +46,26 @@ XinputDevice* XinputManager::getController(int index)
 	return &controllers[index];
 }
 
+bool XinputManager::isAnyButtonPressed(int bitmask)
+{
+	for(auto& a : controllers)
+		if(a.isButtonPressed(bitmask))
+			return true;
+	return false;
+}
+
+bool XinputManager::isAnyButtonReleased(int bitmask)
+{
+	for(auto& a : controllers)
+		if(a.isButtonReleased(bitmask))
+			return true;
+	return false;
+}
+
+bool XinputManager::isButtonStroked(int bitmask)
+{
+	for(auto& a : controllers)
+		if(a.isButtonReleased(bitmask))
+			return true;
+	return false;
+}

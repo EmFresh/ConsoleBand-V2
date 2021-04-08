@@ -248,6 +248,12 @@ public:
 	//gets the controller from index 0 -> 3 (inclusive)
 	static XinputDevice* getController(int index);
 
+	static bool isAnyButtonPressed(int bitmask);
+
+	static bool isAnyButtonReleased(int bitmask);
+
+	static bool isButtonStroked(int bitmask);
+
 private:
 	static	XinputDevice controllers[4];
 };
