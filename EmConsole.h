@@ -390,7 +390,7 @@ struct SpriteSheet
 
 	int size()
 	{
-		return m_sheet->size();
+		return (int)m_sheet->size();
 	}
 
 	Sprite& at(unsigned int index)
@@ -415,7 +415,7 @@ struct SpriteSheet
 	std::vector<Sprite*>::reverse_iterator rend() { return m_sheet->rend(); }
 
 protected:
-	util::Coord2D<> m_pos;
+	util::Coord2D<> m_pos = {};
 	int m_colour = FG_WHITE;
 	std::vector<Sprite*>* m_sheet = new std::vector<Sprite*>;
 };

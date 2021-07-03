@@ -134,27 +134,27 @@ struct XinputDevice
 
 	virtual bool isButtonStroked(int bitmask)
 	{
-		if(isButtonPressed(bitmask))
+		if (isButtonPressed(bitmask))
 			stroke[bitmask] = true;
-		else if(stroke[bitmask] && isButtonReleased(bitmask))
+		else if (stroke[bitmask] && isButtonReleased(bitmask))
 			return ((stroke[bitmask] = false), true);
 
 		return false;
 	}
 
-	XINPUT_STATE info;
-	CONTROLLER_TYPE type;
-	int index;
-	float deadZoneStick = .03f, deadZoneTrigger;
+	XINPUT_STATE info = {};
+	CONTROLLER_TYPE type = CONTROLLER_TYPE::XINPUT_UNKNOWN;
+	int index = 0;
+	float deadZoneStick = .03f, deadZoneTrigger = 0;
 
 private:
 	std::unordered_map<int, bool> stroke;
 };
 
-struct XinputGuitar:public XinputDevice
+struct XinputGuitar :public XinputDevice
 {
 	XinputGuitar() {}
-	
+
 	~XinputGuitar() {}
 
 	int getFrets()
@@ -180,11 +180,11 @@ struct XinputGuitar:public XinputDevice
 	}
 
 private:
-	DWORD frets, strumUp, strumDown;
-	float whammyBar;
+	DWORD frets=0, strumUp=0, strumDown=0;
+	float whammyBar=0;
 };
 
-struct XinputDrum:public XinputDevice
+struct XinputDrum :public XinputDevice
 {
 	XinputDrum() {};
 	//	XinputDrum(XinputDevice div) :XinputDevice(div) {};
@@ -193,7 +193,7 @@ struct XinputDrum:public XinputDevice
 private:
 };
 
-struct XinputController:public XinputDevice
+struct XinputController :public XinputDevice
 {
 	XinputController() {};
 	~XinputController() {};
@@ -218,12 +218,12 @@ struct XinputController:public XinputDevice
 	//
 	void getTriggers(Triggers& triggers)
 	{
-		triggers = {(float)info.Gamepad.bLeftTrigger / 255,  (float)info.Gamepad.bRightTrigger / 255};
+		triggers = { (float)info.Gamepad.bLeftTrigger / 255,  (float)info.Gamepad.bRightTrigger / 255 };
 	}
 
 private:
-	DWORD buttons;
-	float LT, RT;
+	DWORD buttons=0;
+	float LT=0, RT=0;
 };
 
 class XinputManager

@@ -118,9 +118,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4201;4505;4244;4706</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4201;4505;4244;4706;26812;26451;6386</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Xinput.lib;midifile_$(Configuration) $(Platform).lib;fmod64_vc.lib;%(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>

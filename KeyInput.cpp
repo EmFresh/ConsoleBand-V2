@@ -26,7 +26,7 @@ void KeyInput::clearType()
 
 int KeyInput::getTypedSize()
 {
-	return typing.size();
+	return (int)typing.size();
 }
 
 const char* KeyInput::type()
